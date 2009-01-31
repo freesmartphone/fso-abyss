@@ -131,8 +131,15 @@ public class Multiplexer
         portwatch = portchannel.add_watch( IOCondition.IN, device_io_can_read );
 
         //return ctx.startup( true );
-        at_command( "AT+CMUX=0\r\n" );
-        return ctx.startup( false );
+        if ( ctx.mode == 0 )
+        {
+            at_command( "AT+CMUX=0\r\n" );
+            return ctx.startup( false );
+        }
+        else
+        {
+            return ctx.startup( true );
+        }
     }
 
     public void closeSession()
