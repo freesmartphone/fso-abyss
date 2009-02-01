@@ -52,7 +52,7 @@ public class Channel
     int _masterfd;
     int _slavefd;
 
-    public Channel( Multiplexer multiplexer, string name, int number )
+    public Channel( Multiplexer? multiplexer, string name, int number )
     {
         debug( "Channel %s = %d created", name, number );
         _multiplexer = multiplexer;
@@ -64,21 +64,21 @@ public class Channel
     public string acked()
     {
         debug( "Channel now acked! creating pty" );
+
         var path = new char[512];
-        int res = PosixExtra.openpty( out _masterfd, out _slavefd, path, null, null );
-        debug( "openpty returned %d", res );
-        if ( res != 0 )
+        _masterfd = PosixExtra.posix_openpt( PosixExtra.O_RDWR | PosixExtra.O_NOCTTY );
+        if ( _masterfd == -1 )
         {
-            debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
-            return "";
+             debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
+             return "";
         }
-        debug( "pty opened ok, masterfd: %d, slavefd: %d, name %s", _masterfd, _slavefd, (string)path );
+        PosixExtra.grantpt( _masterfd );
+        PosixExtra.unlockpt( _masterfd );
+        PosixExtra.ptsname_r( _masterfd, path );
+        debug( "pty opened ok. fd = %d, name = %s", _masterfd, (string)path );
 
-        _masterchannel = new IOChannel.unix_new( _masterfd );
-        _masterwatch = _masterchannel.add_watch( IOCondition.IN, can_read_from_master );
-
-        //_slavechannel = new IOChannel.unix_new( _slavefd );
-        //_slavewatch = _slavechannel.add_watch( IOCondition.IN, can_read_from_slave );
+         _masterchannel = new IOChannel.unix_new( _masterfd );
+         _masterwatch = _masterchannel.add_watch( IOCondition.IN | IOCondition.HUP, action_from_master );
 
         _status = Status.Acked;
         return (string)path;
@@ -121,32 +121,40 @@ public class Channel
     //
     // callbacks
     //
-    public bool can_read_from_master( IOChannel source, IOCondition condition )
+    public bool action_from_master( IOChannel source, IOCondition condition )
     {
-        assert( condition == IOCondition.IN );
-        debug( "can_read_from_master for fd %d", source.unix_get_fd() );
+        if ( condition == IOCondition.IN )
+        {
+            debug( "can read from fd %d", source.unix_get_fd() );
 
-        var buffer = new char[8192];
-        ssize_t bytesread = PosixExtra.read( _masterfd, buffer, 8192 );
+            var buffer = new char[8192];
+            ssize_t bytesread = PosixExtra.read( _masterfd, buffer, 8192 );
 
-        debug( "read %d bytes from fd %d: %s", (int)bytesread, _masterfd, (string)buffer );
+            debug( "read %d bytes from fd %d: %s", (int)bytesread, _masterfd, (string)buffer );
 
-        _multiplexer.submit_data( _number, buffer, (int)bytesread );
+            if (_multiplexer != null )
+                _multiplexer.submit_data( _number, buffer, (int)bytesread );
+        }
+        else if ( condition == IOCondition.HUP )
+        {
+            debug( "got HUP from fd %d", source.unix_get_fd() );
 
-        return true;
+            _status = Status.Shutdown;
+
+            _masterchannel = null;
+            _slavechannel = null;
+
+            if (_multiplexer != null )
+                _multiplexer.channel_closed( _number );
+
+        }
+        return ( condition == IOCondition.IN );
     }
 
-    public bool can_read_from_slave( IOChannel source, IOCondition condition )
+    public bool action_from_slave( IOChannel source, IOCondition condition )
     {
-        assert( condition == IOCondition.IN );
-        debug( "can_read_from_slave for fd %d", source.unix_get_fd() );
-
-        var buffer = new char[8192];
-        ssize_t bytesread = PosixExtra.read( _slavefd, buffer, 8192 );
-
-        debug( "read %d bytes from fd %d: %s", (int)bytesread, _slavefd, (string)buffer );
-
-        return true;
+        debug( "action from slave w/ condition %d", condition );
+        return false;
     }
 
 }

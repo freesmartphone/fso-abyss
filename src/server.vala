@@ -121,4 +121,10 @@ public class Server : Object
         }
     }
 
+    public void TestOpenChannel()
+    {
+        var c = new Channel( null, "foo", 10 );
+        c.acked();
+    }
+
 }

@@ -175,7 +175,12 @@ namespace PosixExtra {
         ushort ws_ypixel;
     }
 
-/* ------------- pty --------------- */
+    /* ------------- tty --------------- */
+    [CCode (cheader_filename = "unistd.h")]
+    int ttyname_r (int fd, char[] buf);
+
+    /* ------------- pty --------------- */
+
     [CCode (cheader_filename = "pty.h")]
     public int openpty (out int amaster,
                         out int aslave,
@@ -183,5 +188,16 @@ namespace PosixExtra {
                         TermIOs? termp,
                         WinSize? winp);
 
+    [CCode (cheader_filename = "stdlib.h")]
+    public int posix_openpt (int flags);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    int ptsname_r (int fd, char[] buf);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    public int grantpt (int fd);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    public int unlockpt (int fd);
 }
 

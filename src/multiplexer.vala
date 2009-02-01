@@ -118,12 +118,6 @@ public class Multiplexer
         ctx.open_channel = open_channel_fwd;
         ctx.close_channel = close_channel_fwd;
         ctx.terminate = terminate_fwd;
-
-        /*
-        var channel = new Channel( "supername", 1234 );
-        var name = channel.acked();
-        debug( "new channel name = %s", name );
-        */
     }
 
     public bool initSession()
@@ -135,6 +129,9 @@ public class Multiplexer
 
         portchannel = new IOChannel.unix_new( portfd );
         portwatch = portchannel.add_watch( IOCondition.IN, device_io_can_read );
+
+        // make sure we're out of MUX mode
+        ctx.shutdown();
 
         //return ctx.startup( true );
         if ( ctx.mode == 0 )
@@ -224,11 +221,19 @@ public class Multiplexer
         return (string) buffer;
     }
 
+    //
     // callbacks from channel
+    //
     public void submit_data( int channel, void* data, int len )
     {
         debug( "channel -> submit_data" );
         ctx.writeDataForChannel( channel, data, len );
+    }
+
+    public void channel_closed( int channel )
+    {
+        debug( "channel -> closed" );
+        ctx.closeChannel( channel );
     }
 
     //
