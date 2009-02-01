@@ -149,5 +149,39 @@ namespace PosixExtra {
 	public ssize_t read (int fd, void* buf, size_t count);
 	[CCode (cheader_filename = "unistd.h")]
 	public ssize_t write (int fd, void* buf, size_t count);
+
+    /* ------------- termios --------------- */
+
+    [CCode (cname = "struct termios", cheader_filename = "termios.h")]
+    [Compact]
+    public struct TermIOs
+    {
+        uint c_iflag;
+        uint c_oflag;
+        uint c_cflag;
+        uint c_lflag;
+        uchar c_line;
+        uchar[32] c_cc;
+        uint c_ispeed;
+        uint c_ospeed;
+    }
+    [CCode (cname = "struct winsize", cheader_filename = "termios.h")]
+    [Compact]
+    public struct WinSize
+    {
+        ushort ws_row;
+        ushort ws_col;
+        ushort ws_xpixel;
+        ushort ws_ypixel;
+    }
+
+/* ------------- pty --------------- */
+    [CCode (cheader_filename = "pty.h")]
+    public int openpty (out int amaster,
+                        out int aslave,
+                        [CCode (array_length=false, array_null_terminated=true)] char[] name,
+                        TermIOs? termp,
+                        WinSize? winp);
+
 }
 

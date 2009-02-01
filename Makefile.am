@@ -43,6 +43,7 @@ src/.vala.stamp: $(fso_abyss_VALASOURCES)
 
 fso_abyss_LDADD = \
 	$(DEPS_LIBS) \
+	-lutil \
 	$(NULL)
 
 EXTRA_DIST = \

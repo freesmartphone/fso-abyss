@@ -36,14 +36,26 @@ public class Channel
         Shutdown,   /* shutting down, will no longer be openable */
     }
 
+    // FIXME: Do we really want to expose the whole multiplexer object to the channel? Consider only using the relevant delegates.
+    Multiplexer _multiplexer;
+
     Status _status;
     string _name;
     int _number;
     int _serial_status;
 
-    public Channel( string name, int number )
+    IOChannel _masterchannel;
+    IOChannel _slavechannel;
+    uint _masterwatch;
+    uint _slavewatch;
+
+    int _masterfd;
+    int _slavefd;
+
+    public Channel( Multiplexer multiplexer, string name, int number )
     {
         debug( "Channel %s = %d created", name, number );
+        _multiplexer = multiplexer;
         _status = Status.Requested;
         _name = name;
         _number = number;
@@ -52,9 +64,24 @@ public class Channel
     public string acked()
     {
         debug( "Channel now acked! creating pty" );
-        // open pty
+        var path = new char[512];
+        int res = PosixExtra.openpty( out _masterfd, out _slavefd, path, null, null );
+        debug( "openpty returned %d", res );
+        if ( res != 0 )
+        {
+            debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
+            return "";
+        }
+        debug( "pty opened ok, masterfd: %d, slavefd: %d, name %s", _masterfd, _slavefd, (string)path );
+
+        _masterchannel = new IOChannel.unix_new( _masterfd );
+        _masterwatch = _masterchannel.add_watch( IOCondition.IN, can_read_from_master );
+
+        //_slavechannel = new IOChannel.unix_new( _slavefd );
+        //_slavewatch = _slavechannel.add_watch( IOCondition.IN, can_read_from_slave );
+
         _status = Status.Acked;
-        return "/this/path/not/valid";
+        return (string)path;
     }
 
     public void close()
@@ -80,4 +107,46 @@ public class Channel
         _serial_status = s;
         // emit dbus signal or send send condition via pty
     }
+
+    public void deliverData( void* data, int len )
+    {
+        debug( "deliverData()" );
+        ssize_t byteswritten = PosixExtra.write( _masterfd, data, len );
+        if ( (int)byteswritten < len )
+        {
+            error( "could only write %d bytes to pty. buffer overrun!", (int)byteswritten );
+        }
+    }
+
+    //
+    // callbacks
+    //
+    public bool can_read_from_master( IOChannel source, IOCondition condition )
+    {
+        assert( condition == IOCondition.IN );
+        debug( "can_read_from_master for fd %d", source.unix_get_fd() );
+
+        var buffer = new char[8192];
+        ssize_t bytesread = PosixExtra.read( _masterfd, buffer, 8192 );
+
+        debug( "read %d bytes from fd %d: %s", (int)bytesread, _masterfd, (string)buffer );
+
+        _multiplexer.submit_data( _number, buffer, (int)bytesread );
+
+        return true;
+    }
+
+    public bool can_read_from_slave( IOChannel source, IOCondition condition )
+    {
+        assert( condition == IOCondition.IN );
+        debug( "can_read_from_slave for fd %d", source.unix_get_fd() );
+
+        var buffer = new char[8192];
+        ssize_t bytesread = PosixExtra.read( _slavefd, buffer, 8192 );
+
+        debug( "read %d bytes from fd %d: %s", (int)bytesread, _slavefd, (string)buffer );
+
+        return true;
+    }
+
 }

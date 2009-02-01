@@ -118,6 +118,12 @@ public class Multiplexer
         ctx.open_channel = open_channel_fwd;
         ctx.close_channel = close_channel_fwd;
         ctx.terminate = terminate_fwd;
+
+        /*
+        var channel = new Channel( "supername", 1234 );
+        var name = channel.acked();
+        debug( "new channel name = %s", name );
+        */
     }
 
     public bool initSession()
@@ -163,8 +169,8 @@ public class Multiplexer
         var ok = ctx.openChannel( channel );
         assert( ok );
         debug( "0710 open channel returned result %d", (int)ok );
-        vc[channel] = new Channel( name, channel );
-        //FIXME return pts
+        vc[channel] = new Channel( this, name, channel );
+        //FIXME return actual pts
         return "";
     }
 
@@ -216,6 +222,13 @@ public class Multiplexer
         ssize_t bread = PosixExtra.read( fd, buffer, 512 );
         debug( "::readfd read %d bytes", (int)bread );
         return (string) buffer;
+    }
+
+    // callbacks from channel
+    public void submit_data( int channel, void* data, int len )
+    {
+        debug( "channel -> submit_data" );
+        ctx.writeDataForChannel( channel, data, len );
     }
 
     //
@@ -285,6 +298,9 @@ public class Multiplexer
     public void deliver_data( int channel, void* data, int len )
     {
         debug( "0710 -> deliver %d bytes for channel %d", len, channel );
+
+        assert( vc[channel] != null && vc[channel].status() != Channel.Status.Requested );
+        vc[channel].deliverData( data, len );
     }
 
     public void deliver_status( int channel, int serial_status )
