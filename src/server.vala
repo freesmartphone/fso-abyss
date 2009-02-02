@@ -84,6 +84,11 @@ public class Server : Object
     public string AllocChannel( string name, int channel ) throws DBus.Error, GLib.Error
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
+        if ( channel < 0 )
+        {
+            throw new MuxerError.InvalidChannel( "Channel has to be >= 0" );
+        }
+
         if ( muxer == null )
         {
             throw new MuxerError.NoSession( "Session has to be initialized first." );

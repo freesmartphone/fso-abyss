@@ -35,9 +35,10 @@ namespace CONST
     public const double GSM_OPEN_CHANNEL_ACK_TIMEOUT = 2.0;
 
     public errordomain MuxerError {
+        ChannelTaken,
+        InvalidChannel,
         NoSession,
         NoChannel,
-        ChannelTaken,
         SessionAlreadyOpen,
         SessionOpenError,
     }

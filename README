@@ -1,0 +1,10 @@
+Todo before 0.8:
+
+ * Test w/ TI Calypso
+
+Problems waiting for Vala:
+ * No async dbus on server side
+ * No proper dbus errors
+ * No strucs as return types (e.g. for AllocChannel I'd like to return ( ptsname, vcnumber )
+
+

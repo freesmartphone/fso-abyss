@@ -160,8 +160,22 @@ public class Multiplexer
             PosixExtra.close( portfd );
     }
 
-    public string allocChannel( string name, int channel ) throws GLib.Error
+    public string allocChannel( string name, int chan ) throws GLib.Error
     {
+        int channel = chan;
+        if ( chan == 0 )
+        {
+            // find the first free one
+            int i = 1;
+            while ( channel == 0 && i < MAX_CHANNELS )
+            {
+                if ( vc[i] != null && vc[i].status() != Channel.Status.Shutdown )
+                    i++;
+                else
+                    channel = i;
+            }
+        }
+
         debug( "allocChannel requested for name %s, requested channel %d", name, channel );
         // lets check whether we already have this channel
         if ( vc[channel] != null && vc[channel].status() != Channel.Status.Shutdown )
