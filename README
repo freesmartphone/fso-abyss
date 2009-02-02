@@ -1,10 +1,13 @@
-Todo before 0.8:
-
+Todo:
+ * Properly initialize serial port
+ * Add hook for channel ACK
+ * Check auto-reinit in protocol engine
  * Test w/ TI Calypso
+ * Check PSC commands
+ * Check Testing commands
+ * Check SIEMENS version check extension
 
-Problems waiting for Vala:
+Problems due to Vala:
  * No async dbus on server side
  * No proper dbus errors
  * No strucs as return types (e.g. for AllocChannel I'd like to return ( ptsname, vcnumber )
-
-
