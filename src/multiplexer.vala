@@ -160,28 +160,53 @@ public class Multiplexer
             PosixExtra.close( portfd );
     }
 
-    public string allocChannel( string name, int channel )
+    public string allocChannel( string name, int channel ) throws GLib.Error
     {
         debug( "allocChannel requested for name %s, requested channel %d", name, channel );
+        // lets check whether we already have this channel
+        if ( vc[channel] != null && vc[channel].status() != Channel.Status.Shutdown )
+            throw new MuxerError.ChannelTaken( "Channel is already taken." );
+
         var ok = ctx.openChannel( channel );
         assert( ok );
         debug( "0710 open channel returned result %d", (int)ok );
         vc[channel] = new Channel( this, name, channel );
-        //FIXME return actual pts
-        return "";
+
+        var t = new Timer();
+        t.start();
+
+        var mc = MainContext.default();
+        var ack = false;
+
+        // FIXME: Ok, I don't like that, but until Vala supports asnyc dbus
+        // on server side, we have to live with it.
+        do
+        {
+            mc.iteration( false );
+            ack = ( vc[channel].status() == Channel.Status.Acked );
+        }
+        while ( !ack && t.elapsed() < GSM_OPEN_CHANNEL_ACK_TIMEOUT );
+
+        if ( ack )
+            return vc[channel].path();
+        else
+            throw new MuxerError.NoChannel( "Modem does not provide this channel." );
     }
 
-    public void releaseChannel( string name )
+    public void releaseChannel( string name ) throws GLib.Error
     {
         debug( "releaseChannel requested for name %s", name );
+        bool closed = false;
         for ( int i = 1; i < MAX_CHANNELS; ++i )
         {
             if ( vc[i] != null && vc[i].name() == name )
             {
                 vc[i].close();
-                ctx.closeChannel( i );
+                closed = true;
             }
         }
+        if ( !closed )
+            throw new MuxerError.NoChannel( "Could not find any channel with that name." );
     }
 
     //
@@ -219,6 +244,16 @@ public class Multiplexer
         ssize_t bread = PosixExtra.read( fd, buffer, 512 );
         debug( "::readfd read %d bytes", (int)bread );
         return (string) buffer;
+    }
+
+    public int channelByName( string name )
+    {
+        for ( int i = 1; i < MAX_CHANNELS; ++i )
+        {
+            if ( vc[i] != null && vc[i].name() == name )
+                return i;
+        }
+        return 0;
     }
 
     //

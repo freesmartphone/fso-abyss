@@ -42,15 +42,14 @@ public class Channel
     Status _status;
     string _name;
     int _number;
+
+    IOChannel _channel;
+    uint _watch;
+    int _ptyfd = -1;
+
     int _serial_status;
 
-    IOChannel _masterchannel;
-    IOChannel _slavechannel;
-    uint _masterwatch;
-    uint _slavewatch;
-
-    int _masterfd;
-    int _slavefd;
+    char[] _path = new char[512];
 
     public Channel( Multiplexer? multiplexer, string name, int number )
     {
@@ -61,34 +60,46 @@ public class Channel
         _number = number;
     }
 
+    ~Channel()
+    {
+        debug( "Channel %s = %d destructed", _name, _number );
+    }
+
     public string acked()
     {
         debug( "Channel now acked! creating pty" );
 
-        var path = new char[512];
-        _masterfd = PosixExtra.posix_openpt( PosixExtra.O_RDWR | PosixExtra.O_NOCTTY );
-        if ( _masterfd == -1 )
+        _ptyfd = PosixExtra.posix_openpt( PosixExtra.O_RDWR | PosixExtra.O_NOCTTY );
+        if ( _ptyfd == -1 )
         {
              debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
              return "";
         }
-        PosixExtra.grantpt( _masterfd );
-        PosixExtra.unlockpt( _masterfd );
-        PosixExtra.ptsname_r( _masterfd, path );
-        debug( "pty opened ok. fd = %d, name = %s", _masterfd, (string)path );
+        PosixExtra.grantpt( _ptyfd );
+        PosixExtra.unlockpt( _ptyfd );
+        PosixExtra.ptsname_r( _ptyfd, _path );
+        debug( "pty opened ok. fd = %d, name = %s", _ptyfd, (string)_path );
 
-         _masterchannel = new IOChannel.unix_new( _masterfd );
-         _masterwatch = _masterchannel.add_watch( IOCondition.IN | IOCondition.HUP, action_from_master );
+         _channel = new IOChannel.unix_new( _ptyfd );
+         _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, action_from_master );
 
         _status = Status.Acked;
-        return (string)path;
+        return (string)_path;
     }
 
     public void close()
     {
         debug( "close()" );
-        // close pty, if open
         _status = Status.Shutdown;
+        // notify multiplexer
+        if (_multiplexer != null )
+            _multiplexer.channel_closed( _number );
+        // remove watches
+        if ( _watch != 0 )
+            Source.remove( _watch );
+        _channel = null;
+        if ( _ptyfd != -1 )
+            Posix.close( _ptyfd );
     }
 
     public string name()
@@ -101,6 +112,11 @@ public class Channel
         return _status;
     }
 
+    public string path()
+    {
+        return (string)_path;
+    }
+
     public void setSerialStatus( int s )
     {
         debug( "setSerialStatus()" );
@@ -111,7 +127,7 @@ public class Channel
     public void deliverData( void* data, int len )
     {
         debug( "deliverData()" );
-        ssize_t byteswritten = PosixExtra.write( _masterfd, data, len );
+        ssize_t byteswritten = PosixExtra.write( _ptyfd, data, len );
         if ( (int)byteswritten < len )
         {
             error( "could only write %d bytes to pty. buffer overrun!", (int)byteswritten );
@@ -128,9 +144,9 @@ public class Channel
             debug( "can read from fd %d", source.unix_get_fd() );
 
             var buffer = new char[8192];
-            ssize_t bytesread = PosixExtra.read( _masterfd, buffer, 8192 );
+            ssize_t bytesread = PosixExtra.read( _ptyfd, buffer, 8192 );
 
-            debug( "read %d bytes from fd %d: %s", (int)bytesread, _masterfd, (string)buffer );
+            debug( "read %d bytes from fd %d: %s", (int)bytesread, _ptyfd, (string)buffer );
 
             if (_multiplexer != null )
                 _multiplexer.submit_data( _number, buffer, (int)bytesread );
@@ -138,15 +154,7 @@ public class Channel
         else if ( condition == IOCondition.HUP )
         {
             debug( "got HUP from fd %d", source.unix_get_fd() );
-
-            _status = Status.Shutdown;
-
-            _masterchannel = null;
-            _slavechannel = null;
-
-            if (_multiplexer != null )
-                _multiplexer.channel_closed( _number );
-
+            close();
         }
         return ( condition == IOCondition.IN );
     }

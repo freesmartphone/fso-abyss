@@ -49,35 +49,30 @@ public class Server : Object
         return MUXER_VERSION;
     }
 
-    public bool InitSession( bool advanced, int framesize, string port, int portspeed )
+    public bool OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
     {
         debug( "InitSession requested for mode %s, framesize %d, port %s @ %d", advanced? "advanced":"basic", framesize, port, portspeed );
         if ( muxer != null )
         {
-            error( "muxer already initialized" );
-            return false;
-            //FIXME raise dbus error
+            throw new MuxerError.SessionAlreadyOpen( "Close session before opening another one." );
         }
         else
         {
             muxer = new Multiplexer( advanced, framesize, port, portspeed );
             if ( !muxer.initSession() )
             {
-                error( "can't initialize muxer session" );
-                return false;
-                //FIXME raise dbus error
+                throw new MuxerError.SessionOpenError( "Can't initialize the session" );
             }
             return true;
         }
     }
 
-    public void CloseSession()
+    public void CloseSession() throws DBus.Error, GLib.Error
     {
         debug( "CloseSession requested" );
         if ( muxer == null )
         {
-            error( "muxer not yet initialized" );
-            //FIXME raise dbus error
+            throw new MuxerError.NoSession( "Session has to be initialized first." );
         }
         else
         {
@@ -86,26 +81,23 @@ public class Server : Object
         }
     }
 
-    public string AllocChannel( string name, int channel )
+    public string AllocChannel( string name, int channel ) throws DBus.Error, GLib.Error
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
         if ( muxer == null )
         {
-            error( "muxer not yet initialized" );
-            return "";
-            //FIXME raise dbus error
+            throw new MuxerError.NoSession( "Session has to be initialized first." );
         }
         else
             return muxer.allocChannel( name, channel );
     }
 
-    public void ReleaseChannel( string name )
+    public void ReleaseChannel( string name ) throws DBus.Error, GLib.Error
     {
         debug( "ReleaseChannel requested for name %s", name );
         if ( muxer == null )
         {
-            error( "muxer not yet initialized" );
-            //FIXME raise dbus error
+            throw new MuxerError.NoSession( "Session has to be initialized first." );
         }
         else
             muxer.releaseChannel( name );
