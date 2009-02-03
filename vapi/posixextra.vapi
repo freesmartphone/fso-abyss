@@ -56,13 +56,17 @@ namespace PosixExtra {
         public long tv_usec;
     }
 
+    /* ------------- pty --------------- */
+
+    [CCode (cheader_filename = "pty.h")]
+    public int openpty (out int amaster,
+                        out int aslave,
+                        [CCode (array_length=false, array_null_terminated=true)] char[] name,
+                        TermIOs? termp,
+                        WinSize? winp);
+
     [CCode (cheader_filename = "sys/select.h")]
     public int select (int nfds, FdSet readfds, FdSet writefds, FdSet exceptfds, TimeVal timeval);
-
-
-    /* ---------termios ------------------- */
-    [CCode (cheader_filename = "termios.h")]
-    public int tcdrain (int fd);
 
     /* -------- signal -------------------- */
     [CCode (cheader_filename = "signal.h")]
@@ -141,6 +145,19 @@ namespace PosixExtra {
     [CCode (cheader_filename = "signal.h")]
     public sighandler_t signal (int signum, sighandler_t handler);
 
+    /* --------- stdlib --------------- */
+    [CCode (cheader_filename = "stdlib.h")]
+    public int posix_openpt (int flags);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    int ptsname_r (int fd, char[] buf);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    public int grantpt (int fd);
+
+    [CCode (cheader_filename = "stdlib.h")]
+    public int unlockpt (int fd);
+
     /* ---------------------------- */
 
 	[CCode (cheader_filename = "unistd.h")]
@@ -174,30 +191,12 @@ namespace PosixExtra {
         ushort ws_xpixel;
         ushort ws_ypixel;
     }
+    [CCode (cheader_filename = "termios.h")]
+    public int tcdrain (int fd);
 
     /* ------------- tty --------------- */
     [CCode (cheader_filename = "unistd.h")]
     int ttyname_r (int fd, char[] buf);
 
-    /* ------------- pty --------------- */
-
-    [CCode (cheader_filename = "pty.h")]
-    public int openpty (out int amaster,
-                        out int aslave,
-                        [CCode (array_length=false, array_null_terminated=true)] char[] name,
-                        TermIOs? termp,
-                        WinSize? winp);
-
-    [CCode (cheader_filename = "stdlib.h")]
-    public int posix_openpt (int flags);
-
-    [CCode (cheader_filename = "stdlib.h")]
-    int ptsname_r (int fd, char[] buf);
-
-    [CCode (cheader_filename = "stdlib.h")]
-    public int grantpt (int fd);
-
-    [CCode (cheader_filename = "stdlib.h")]
-    public int unlockpt (int fd);
 }
 
