@@ -244,10 +244,42 @@ public class Multiplexer
 
         assert( portspeed == 115200 );
 
+        // 115200
         PosixExtra.cfsetispeed( termios, PosixExtra.B115200 );
         PosixExtra.cfsetospeed( termios, PosixExtra.B115200 );
 
+        // local read
         termios.c_cflag |= (PosixExtra.CLOCAL | PosixExtra.CREAD);
+
+        // 8n1
+        termios.c_cflag &= ~PosixExtra.PARENB;
+        termios.c_cflag &= ~PosixExtra.CSTOPB;
+        termios.c_cflag &= ~PosixExtra.CSIZE;
+        termios.c_cflag |= PosixExtra.CS8;
+
+        // hardware flow control
+        termios.c_cflag |= PosixExtra.CRTSCTS;
+        termios.c_iflag &= ~(PosixExtra.IXON | PosixExtra.IXOFF | PosixExtra.IXANY);
+
+        // raw input
+        termios.c_lflag &= ~(PosixExtra.ICANON | PosixExtra.ECHO | PosixExtra.ECHOE | PosixExtra.ISIG);
+
+        // raw output
+        termios.c_oflag &= ~PosixExtra.OPOST;
+
+        // no special character handling
+        termios.c_cc[PosixExtra.VMIN] = 0;
+        termios.c_cc[PosixExtra.VTIME] = 10;
+        termios.c_cc[PosixExtra.VINTR] = 0;
+        termios.c_cc[PosixExtra.VQUIT] = 0;
+        termios.c_cc[PosixExtra.VSTART] = 0;
+        termios.c_cc[PosixExtra.VSTOP] = 0;
+        termios.c_cc[PosixExtra.VSUSP] = 0;
+
+        PosixExtra.tcsetattr( portfd, PosixExtra.TCSAFLUSH, termios);
+
+        int status = PosixExtra.TIOCM_DTR | PosixExtra.TIOCM_RTS;
+        Posix.ioctl( portfd, PosixExtra.TIOCMBIS, &status );
 
         return true;
     }

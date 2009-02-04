@@ -2,9 +2,17 @@
  *
  * Scheduled for inclusion in posix.vapi
  */
-
 [CCode (cprefix = "", lower_case_cprefix = "")]
 namespace PosixExtra {
+
+
+
+
+    [CCode (cheader_filename = "sys/ioctl.h")]
+    public const int TIOCMBIS;
+
+
+
 	[CCode (cheader_filename = "fcntl.h")]
 	public const int O_ACCMODE;
 	[CCode (cheader_filename = "fcntl.h")]
@@ -246,6 +254,16 @@ namespace PosixExtra {
     [CCode (cheader_filename = "termios.h")]
     public const int CRTSCTS;
     [CCode (cheader_filename = "termios.h")]
+    public const int CSIZE;
+    [CCode (cheader_filename = "termios.h")]
+    public const int CS5;
+    [CCode (cheader_filename = "termios.h")]
+    public const int CS6;
+    [CCode (cheader_filename = "termios.h")]
+    public const int CS7;
+    [CCode (cheader_filename = "termios.h")]
+    public const int CS8;
+    [CCode (cheader_filename = "termios.h")]
     public const int CSTOPB;
     [CCode (cheader_filename = "termios.h")]
     public const int ECHO;
@@ -341,6 +359,34 @@ namespace PosixExtra {
     public const int TCSADRAIN;
     [CCode (cheader_filename = "termios.h")]
     public const int TCSAFLUSH;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_LE;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_DTR;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_RTS;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_ST;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_SR;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_CTS;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_CARM;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_RNG;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_DSR;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_CD;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_RI;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_OUT1;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_OUT2;
+    [CCode (cheader_filename = "termios.h")]
+    public const int TIOCM_LOOP;
     [CCode (cheader_filename = "termios.h")]
     public const int TOSTOP;
     [CCode (cheader_filename = "termios.h")]
