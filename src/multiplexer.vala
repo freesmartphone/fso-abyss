@@ -92,20 +92,23 @@ public class Multiplexer
     int portfd = -1;
     IOChannel portchannel;
     uint portwatch;
+    uint portspeed;
 
     Channel[] vc = new Channel[MAX_CHANNELS];
 
-    public Multiplexer( bool advanced, int framesize, string portname_, int portspeed )
+    public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_ )
     {
-        debug( "Multiplexer created for mode %s, framesize %d, device %s @ %d", advanced? "advanced":"basic", framesize, portname_, portspeed );
+        debug( "Multiplexer created for mode %s, framesize %d, device %s @ %d", advanced? "advanced":"basic", framesize, portname_, portspeed_ );
         portname = portname_;
+        portspeed = portspeed_;
+
         ctx = new Context();
         ctx.initialize();
 
         ctx.server = 0;
         ctx.mode = advanced? 1 : 0;
         ctx.frame_size = framesize;
-        ctx.port_speed = portspeed;
+        ctx.port_speed = portspeed_;
 
         ctx.user_data = this;
 
@@ -123,11 +126,9 @@ public class Multiplexer
     public bool initSession()
     {
         debug( "initSession" );
-        portfd = PosixExtra.open( portname, PosixExtra.O_RDWR | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
-        if ( portfd == -1 )
+
+        if ( !openSerial() )
             return false;
-        else
-            Posix.fcntl( portfd, Posix.F_SETFL, 0 );
 
         portchannel = new IOChannel.unix_new( portfd );
         portwatch = portchannel.add_watch( IOCondition.IN, device_io_can_read );
@@ -135,7 +136,6 @@ public class Multiplexer
         // make sure we're out of MUX mode
         ctx.shutdown();
 
-        //return ctx.startup( true );
         if ( ctx.mode == 0 )
         {
             at_command( "AT+CMUX=0\r\n" );
@@ -231,6 +231,27 @@ public class Multiplexer
     //
     // internal helpers
     //
+    public bool openSerial()
+    {
+        portfd = PosixExtra.open( portname, PosixExtra.O_RDWR | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
+        if ( portfd == -1 )
+            return false;
+
+        Posix.fcntl( portfd, Posix.F_SETFL, 0 );
+
+        PosixExtra.TermIOs termios = new PosixExtra.TermIOs();
+        PosixExtra.tcgetattr( portfd, termios );
+
+        assert( portspeed == 115200 );
+
+        PosixExtra.cfsetispeed( termios, PosixExtra.B115200 );
+        PosixExtra.cfsetospeed( termios, PosixExtra.B115200 );
+
+        termios.c_cflag |= (PosixExtra.CLOCAL | PosixExtra.CREAD);
+
+        return true;
+    }
+
     public bool writefd( string command, int fd )
     {
         var readfds = new PosixExtra.FdSet();

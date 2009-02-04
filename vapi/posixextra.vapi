@@ -378,27 +378,27 @@ namespace PosixExtra {
     [CCode (cheader_filename = "termios.h")]
     public const int VWERASE;
 
-    [CCode (cname = "struct termios", cheader_filename = "termios.h")]
+    [CCode (cname = "struct termios", cheader_filename = "termios.h", free_function = "")]
     [Compact]
-    public struct TermIOs
+    public class TermIOs
     {
-        uint c_iflag;
-        uint c_oflag;
-        uint c_cflag;
-        uint c_lflag;
-        uchar c_line;
-        uchar[32] c_cc;
-        uint c_ispeed;
-        uint c_ospeed;
+        public uint c_iflag;
+        public uint c_oflag;
+        public uint c_cflag;
+        public uint c_lflag;
+        public uchar c_line;
+        public uchar[32] c_cc;
+        public uint c_ispeed;
+        public uint c_ospeed;
     }
-    [CCode (cname = "struct winsize", cheader_filename = "termios.h")]
+    [CCode (cname = "struct winsize", cheader_filename = "termios.h", free_function = "")]
     [Compact]
-    public struct WinSize
+    public class WinSize
     {
-        ushort ws_row;
-        ushort ws_col;
-        ushort ws_xpixel;
-        ushort ws_ypixel;
+        public ushort ws_row;
+        public ushort ws_col;
+        public ushort ws_xpixel;
+        public ushort ws_ypixel;
     }
     [CCode (cheader_filename = "termios.h")]
     public void cfmakeraw (TermIOs termios_p);
