@@ -1,3 +1,13 @@
+2009-02-04	Michael Lauer	<mlauer@vanille-media.de>
+
+	* org.freesmartphone.GSM.MUX.OpenSession no longer returns a parameter,
+	  if it fails, it will throw an error.
+
+	* org.freesmartphone.GSM.MUX.AllocChannel now returns two parameters, one
+	  for the allocated pty, the other one for the allocated channel (which is
+	  unknown to the client if it calls AllocChannel with '0' as channel, since
+	  this translates to 'the next free one'.)
+
 2009-02-02	Michael Lauer	<mlauer@vanille-media.de>
 
 	* Added preliminary dbus error messages and finished the dbus interface.

@@ -49,7 +49,7 @@ public class Server : Object
         return MUXER_VERSION;
     }
 
-    public bool OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
+    public void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
     {
         debug( "InitSession requested for mode %s, framesize %d, port %s @ %d", advanced? "advanced":"basic", framesize, port, portspeed );
         if ( muxer != null )
@@ -63,7 +63,6 @@ public class Server : Object
             {
                 throw new MuxerError.SessionOpenError( "Can't initialize the session" );
             }
-            return true;
         }
     }
 
@@ -81,7 +80,7 @@ public class Server : Object
         }
     }
 
-    public string AllocChannel( string name, int channel ) throws DBus.Error, GLib.Error
+    public void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error, GLib.Error
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
         if ( channel < 0 )
@@ -94,7 +93,7 @@ public class Server : Object
             throw new MuxerError.NoSession( "Session has to be initialized first." );
         }
         else
-            return muxer.allocChannel( name, channel );
+            muxer.allocChannel( name, channel, out path, out allocated_channel );
     }
 
     public void ReleaseChannel( string name ) throws DBus.Error, GLib.Error
@@ -118,10 +117,12 @@ public class Server : Object
         }
     }
 
-    public void TestOpenChannel()
+    public void TestOpenChannel( out int foo, out string bar )
     {
-        var c = new Channel( null, "foo", 10 );
-        c.acked();
+        //var c = new Channel( null, "foo", 10 );
+        //c.acked();
+        foo = 10;
+        bar = "Yo Kurt";
     }
 
 }

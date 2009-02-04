@@ -10,4 +10,3 @@ Todo:
 Problems due to Vala:
  * No async dbus on server side
  * No proper dbus errors
- * No strucs as return types (e.g. for AllocChannel I'd like to return ( ptsname, vcnumber )

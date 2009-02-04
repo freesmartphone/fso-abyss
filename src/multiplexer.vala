@@ -160,7 +160,7 @@ public class Multiplexer
             PosixExtra.close( portfd );
     }
 
-    public string allocChannel( string name, int chan ) throws GLib.Error
+    public void allocChannel( string name, int chan, out string path, out int allocated_channel ) throws GLib.Error
     {
         int channel = chan;
         if ( chan == 0 )
@@ -202,7 +202,10 @@ public class Multiplexer
         while ( !ack && t.elapsed() < GSM_OPEN_CHANNEL_ACK_TIMEOUT );
 
         if ( ack )
-            return vc[channel].path();
+        {
+            path = vc[channel].path();
+            allocated_channel = chan;
+        }
         else
             throw new MuxerError.NoChannel( "Modem does not provide this channel." );
     }
