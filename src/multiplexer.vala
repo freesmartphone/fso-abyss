@@ -123,9 +123,11 @@ public class Multiplexer
     public bool initSession()
     {
         debug( "initSession" );
-        portfd = PosixExtra.open( portname, PosixExtra.O_RDWR ); // | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
+        portfd = PosixExtra.open( portname, PosixExtra.O_RDWR | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
         if ( portfd == -1 )
             return false;
+        else
+            Posix.fcntl( portfd, Posix.F_SETFL, 0 );
 
         portchannel = new IOChannel.unix_new( portfd );
         portwatch = portchannel.add_watch( IOCondition.IN, device_io_can_read );

@@ -117,12 +117,21 @@ public class Server : Object
         }
     }
 
-    public void TestOpenChannel( out int foo, out string bar )
+    public struct Keule
     {
+        public int foo;
+        public string bar;
+    }
+
+    public Keule TestOpenChannel( Keule k )
+    {
+        debug( "got keule: %d, %s", k.foo, k.bar );
         //var c = new Channel( null, "foo", 10 );
         //c.acked();
-        foo = 10;
-        bar = "Yo Kurt";
+        Keule keule = { 10, "yo Kurt" };
+        //keule.foo = 10;
+        //keule.bar = "yo kurt";
+        return keule;
     }
 
 }
