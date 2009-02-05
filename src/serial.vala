@@ -104,7 +104,7 @@ public class Serial : Object
 
         Posix.fcntl( _portfd, Posix.F_SETFL, 0 );
 
-        PosixExtra.TermIOs termios = new PosixExtra.TermIOs();
+        PosixExtra.TermIOs termios = {};
         PosixExtra.tcgetattr( _portfd, termios );
 
         if ( _portspeed == 115200 )

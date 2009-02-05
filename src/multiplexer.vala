@@ -252,7 +252,7 @@ public class Multiplexer
 
         Posix.fcntl( portfd, Posix.F_SETFL, 0 );
 
-        PosixExtra.TermIOs termios = new PosixExtra.TermIOs();
+        PosixExtra.TermIOs termios = {};
         PosixExtra.tcgetattr( portfd, termios );
 
         assert( portspeed == 115200 );

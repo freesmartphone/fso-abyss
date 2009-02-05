@@ -56,8 +56,7 @@ namespace PosixExtra {
         public void zero ();
     }
 
-    [CCode (cname = "struct timeval", cheader_filename = "time.h")]
-    [Compact]
+    [CCode (cname = "struct timeval", cheader_filename = "time.h", destroy_function = "")]
     public struct TimeVal
     {
         public long tv_sec;
@@ -347,9 +346,8 @@ namespace PosixExtra {
     [CCode (cheader_filename = "termios.h")]
     public const int VWERASE;
 
-    [CCode (cname = "struct termios", cheader_filename = "termios.h", free_function = "")]
-    [Compact]
-    public class TermIOs
+    [CCode (cname = "struct termios", cheader_filename = "termios.h", destroy_function = "")]
+    public struct TermIOs
     {
         public uint c_iflag;
         public uint c_oflag;
@@ -360,9 +358,8 @@ namespace PosixExtra {
         public uint c_ispeed;
         public uint c_ospeed;
     }
-    [CCode (cname = "struct winsize", cheader_filename = "termios.h", free_function = "")]
-    [Compact]
-    public class WinSize
+    [CCode (cname = "struct winsize", cheader_filename = "termios.h", destroy_function = "")]
+    public struct WinSize
     {
         public ushort ws_row;
         public ushort ws_col;
