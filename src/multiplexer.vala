@@ -87,6 +87,8 @@ public static void terminate_fwd( Context ctx )
 //
 public class Multiplexer
 {
+    Server server;
+
     string portname;
     Context ctx;
     int portfd = -1;
@@ -96,11 +98,12 @@ public class Multiplexer
 
     Channel[] vc = new Channel[MAX_CHANNELS];
 
-    public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_ )
+    public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_, Server server_ )
     {
         debug( "Multiplexer created for mode %s, framesize %d, device %s @ %d", advanced? "advanced":"basic", framesize, portname_, portspeed_ );
         portname = portname_;
         portspeed = portspeed_;
+        server = server_;
 
         ctx = new Context();
         ctx.initialize();
@@ -121,6 +124,7 @@ public class Multiplexer
         ctx.open_channel = open_channel_fwd;
         ctx.close_channel = close_channel_fwd;
         ctx.terminate = terminate_fwd;
+
     }
 
     public bool initSession()
@@ -228,6 +232,15 @@ public class Multiplexer
             throw new MuxerError.NoChannel( "Could not find any channel with that name." );
     }
 
+    public void setStatus( int channel, string status ) throws GLib.Error
+    {
+        debug( "setStatus requested for channel %d", channel );
+        if ( vc[channel] == null )
+            throw new MuxerError.NoChannel( "Could not find channel with that index." );
+
+        // FIXME: ...
+    }
+
     //
     // internal helpers
     //
@@ -328,6 +341,24 @@ public class Multiplexer
         return 0;
     }
 
+    public string serialStatusToString( int status )
+    {
+        var sb = new StringBuilder();
+        if ( ( status & SerialStatus.FC ) == SerialStatus.FC )
+            sb.append( "FC ");
+        if ( ( status & SerialStatus.DTR ) == SerialStatus.DTR )
+            sb.append( "DTR ");
+        if ( ( status & SerialStatus.DSR ) == SerialStatus.DSR )
+            sb.append( "DSR ");
+        if ( ( status & SerialStatus.RTS ) == SerialStatus.RTS )
+            sb.append( "RTS ");
+        if ( ( status & SerialStatus.CTS ) == SerialStatus.CTS )
+            sb.append( "CTS ");
+        if ( ( status & SerialStatus.DCD ) == SerialStatus.DCD )
+            sb.append( "DCD ");
+        return sb.str;
+    }
+
     //
     // callbacks from channel
     //
@@ -417,14 +448,14 @@ public class Multiplexer
 
     public void deliver_status( int channel, int serial_status )
     {
-        debug( "0710 -> deliver status %d for channel %d", serial_status, channel );
+        string status = serialStatusToString( serial_status );
+        debug( "0710 -> deliver status %d = '%s' for channel %d", serial_status, status, channel );
         assert( vc[channel] != null );
         if ( vc[channel].status() == Channel.Status.Requested )
         {
-            vc[channel].acked(); // submit serial status
+            vc[channel].acked();
         }
-        else
-            vc[channel].setSerialStatus( serial_status );
+        server.Status( channel, status );
     }
 
     public void debug_message( string msg )

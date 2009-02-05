@@ -58,7 +58,7 @@ public class Server : Object
         }
         else
         {
-            muxer = new Multiplexer( advanced, framesize, port, portspeed );
+            muxer = new Multiplexer( advanced, framesize, port, portspeed, this );
             if ( !muxer.initSession() )
             {
                 throw new MuxerError.SessionOpenError( "Can't initialize the session" );
@@ -106,6 +106,14 @@ public class Server : Object
         else
             muxer.releaseChannel( name );
     }
+
+    public void SetStatus( int channel, string status ) throws DBus.Error, GLib.Error
+    {
+        debug( "SetStatus requested for channel %d, status = %s", channel, status );
+        muxer.setStatus( channel, status );
+    }
+
+    public signal void Status( int channel, string status );
 
     public void _shutdown()
     {

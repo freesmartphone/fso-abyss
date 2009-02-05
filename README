@@ -1,11 +1,11 @@
 Todo:
- * Properly initialize serial port
+ * Handle serial control
  * Add hook for channel ACK
  * Check auto-reinit in protocol engine
- * Test w/ TI Calypso
  * Check PSC commands
  * Check Testing commands
  * Check SIEMENS version check extension
+ * Use Serial object in multiplexer as well
 
 Problems due to Vala:
  * No async dbus on server side
