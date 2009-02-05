@@ -346,14 +346,12 @@ public class Multiplexer
         var sb = new StringBuilder();
         if ( ( status & SerialStatus.FC ) == SerialStatus.FC )
             sb.append( "FC ");
-        if ( ( status & SerialStatus.DTR ) == SerialStatus.DTR )
-            sb.append( "DTR ");
         if ( ( status & SerialStatus.DSR ) == SerialStatus.DSR )
             sb.append( "DSR ");
-        if ( ( status & SerialStatus.RTS ) == SerialStatus.RTS )
-            sb.append( "RTS ");
         if ( ( status & SerialStatus.CTS ) == SerialStatus.CTS )
             sb.append( "CTS ");
+        if ( ( status & SerialStatus.RING ) == SerialStatus.RING )
+            sb.append( "RING ");
         if ( ( status & SerialStatus.DCD ) == SerialStatus.DCD )
             sb.append( "DCD ");
         return sb.str;

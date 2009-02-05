@@ -24,7 +24,7 @@ namespace Gsm0710
     [CCode (cname = "GSM0710StatusType", cprefix="GSM0710_")]
     public enum SerialStatus
     {
-        FC, DTR, DSR, RTS, CTS, DCD
+        FC, DTR, DSR, RTS, CTS, RING, DCD
     }
 
     [CCode (cheader_filename = "errno.h")]

@@ -55,6 +55,7 @@ extern "C" {
 #define GSM0710_DSR                     0x04
 #define GSM0710_RTS                     0x08
 #define GSM0710_CTS                     0x08
+#define GSM0710_RING                    0x40
 #define GSM0710_DCD                     0x80
 
 struct gsm0710_context;
