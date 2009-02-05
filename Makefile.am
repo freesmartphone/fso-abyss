@@ -17,6 +17,7 @@ sbin_PROGRAMS = fso-abyss
 
 fso_abyss_VALASOURCES = \
 	src/consts.vala \
+	src/serial.vala \
 	src/channel.vala \
 	src/multiplexer.vala \
 	src/server.vala \
@@ -53,6 +54,7 @@ EXTRA_DIST = \
 
 CLEANFILES = \
 	src/channel.? \
+	src/serial.? \
 	src/multiplexer.? \
 	src/server.? \
 	src/consts.? \
