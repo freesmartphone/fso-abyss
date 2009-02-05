@@ -21,21 +21,52 @@
 
 //===========================================================================
 using GLib;
+//===========================================================================
 
 //===========================================================================
-// The Serial class
-//
-public class Serial
+public class Serial : Object
+//===========================================================================
 {
     string _portname;
     uint _portspeed;
     int _portfd = -1;
     uint _v24;
 
-    public Serial( string portname, uint portspeed )
+    IOChannel _channel;
+    uint _watch;
+
+    protected bool _isPty;
+    char[] _ptyname = new char[512]; // MAX_PATH?
+
+    protected HupFunc _hupfunc;
+    protected ReadFunc _readfunc;
+
+    public Serial( string portname, uint portspeed, HupFunc? hupfunc, ReadFunc? readfunc )
     {
+        debug( "Serial Port %s (%u) created", portname, portspeed );
         _portname = portname;
         _portspeed = portspeed;
+        _hupfunc = hupfunc;
+        _readfunc = readfunc;
+    }
+
+    ~Serial()
+    {
+        debug( "Serial Port %s (%u) destructed", _portname, _portspeed );
+    }
+
+    public void close()
+    {
+        if ( _watch != 0 )
+        Source.remove( _watch );
+        _channel = null;
+        if ( _portfd != -1 )
+            Posix.close( _portfd );
+    }
+
+    public int fileno()
+    {
+        return _portfd;
     }
 
     public bool isOpen()
@@ -43,13 +74,32 @@ public class Serial
         return ( _portfd != -1 );
     }
 
-    public int openRaw()
+    public string name()
     {
-        _portfd = PosixExtra.open( _portname, PosixExtra.O_RDWR | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
+        return _isPty? (string)_ptyname : _portname;
+    }
+
+    public bool openRaw()
+    {
+        if ( _isPty )
+        {
+            _portfd = PosixExtra.posix_openpt( PosixExtra.O_RDWR | PosixExtra.O_NOCTTY /* | PosixExtra.O_NONBLOCK */ );
+        }
+        else
+        {
+            _portfd = PosixExtra.open( _portname, PosixExtra.O_RDWR | PosixExtra.O_NOCTTY | PosixExtra.O_NONBLOCK );
+        }
         if ( _portfd == -1 )
         {
             warning( "could not open %s: %s", _portname, Posix.strerror( Posix.errno ) );
-            return _portfd;
+            return false;
+        }
+
+        if ( _isPty )
+        {
+            PosixExtra.grantpt( _portfd );
+            PosixExtra.unlockpt( _portfd );
+            PosixExtra.ptsname_r( _portfd, _ptyname );
         }
 
         Posix.fcntl( _portfd, Posix.F_SETFL, 0 );
@@ -57,12 +107,14 @@ public class Serial
         PosixExtra.TermIOs termios = new PosixExtra.TermIOs();
         PosixExtra.tcgetattr( _portfd, termios );
 
-        // other speeds not implemented yet
-        assert( _portspeed == 115200 );
-
-        // 115200
-        PosixExtra.cfsetispeed( termios, PosixExtra.B115200 );
-        PosixExtra.cfsetospeed( termios, PosixExtra.B115200 );
+        if ( _portspeed == 115200 )
+        {
+            // 115200
+            PosixExtra.cfsetispeed( termios, PosixExtra.B115200 );
+            PosixExtra.cfsetospeed( termios, PosixExtra.B115200 );
+        }
+        else
+            warning( "portspeed != 115200" );
 
         // local read
         termios.c_cflag |= (PosixExtra.CLOCAL | PosixExtra.CREAD);
@@ -97,12 +149,57 @@ public class Serial
         _v24 = PosixExtra.TIOCM_DTR | PosixExtra.TIOCM_RTS;
         Posix.ioctl( _portfd, PosixExtra.TIOCMBIS, &_v24 );
 
-        return _portfd;
+        // setup watches, if we have delegates
+        if ( _hupfunc != null || _readfunc != null )
+        {
+            _channel = new IOChannel.unix_new( _portfd );
+            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
+        }
+
+        return true;
     }
 
-    ~Serial()
+    public int read( void* data, int len )
     {
-        debug( "Serial Port %s (%ud) destructed", _portname, _portspeed );
+        assert( _portfd != -1 );
+        ssize_t bytesread = Posix.read( _portfd, data, len );
+        return (int)bytesread;
     }
 
+    public int write( void* data, int len )
+    {
+        assert( _portfd != -1 );
+        ssize_t byteswritten = Posix.write( _portfd, data, len );
+        return (int)byteswritten;
+    }
+
+    public bool _actionCallback( IOChannel source, IOCondition condition )
+    {
+        debug( "_actionCallback, condition = %d", condition );
+        if ( IOCondition.IN == condition && _readfunc != null )
+        {
+            _readfunc( this );
+            return true;
+        }
+        if ( IOCondition.HUP == condition && _hupfunc != null )
+            _hupfunc( this );
+        return false;
+    }
 }
+
+//===========================================================================
+public class Pty : Serial
+//===========================================================================
+{
+    public Pty( HupFunc? hupfunc, ReadFunc? readfunc )
+    {
+        debug( "Pseudo Tty created" );
+
+        _readfunc = readfunc;
+        _hupfunc = hupfunc;
+        _isPty = true;
+    }
+}
+//===========================================================================
+public delegate void HupFunc( Serial serial );
+public delegate void ReadFunc( Serial serial );

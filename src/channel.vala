@@ -40,16 +40,13 @@ public class Channel
     Multiplexer _multiplexer;
 
     Status _status;
+
     string _name;
     int _number;
 
-    IOChannel _channel;
-    uint _watch;
-    int _ptyfd = -1;
+    Pty _pty;
 
     int _serial_status;
-
-    char[] _path = new char[512];
 
     public Channel( Multiplexer? multiplexer, string name, int number )
     {
@@ -69,22 +66,15 @@ public class Channel
     {
         debug( "Channel now acked! creating pty" );
 
-        _ptyfd = PosixExtra.posix_openpt( PosixExtra.O_RDWR | PosixExtra.O_NOCTTY );
-        if ( _ptyfd == -1 )
+        _pty = new Pty( onHup, onRead );
+        if ( !_pty.openRaw() )
         {
              debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
              return "";
         }
-        PosixExtra.grantpt( _ptyfd );
-        PosixExtra.unlockpt( _ptyfd );
-        PosixExtra.ptsname_r( _ptyfd, _path );
-        debug( "pty opened ok. fd = %d, name = %s", _ptyfd, (string)_path );
-
-         _channel = new IOChannel.unix_new( _ptyfd );
-         _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, action_from_master );
 
         _status = Status.Acked;
-        return (string)_path;
+        return _pty.name();
     }
 
     public void close()
@@ -94,12 +84,8 @@ public class Channel
         // notify multiplexer
         if (_multiplexer != null )
             _multiplexer.channel_closed( _number );
-        // remove watches
-        if ( _watch != 0 )
-            Source.remove( _watch );
-        _channel = null;
-        if ( _ptyfd != -1 )
-            Posix.close( _ptyfd );
+        _pty.close();
+        _pty = null;
     }
 
     public string name()
@@ -114,7 +100,7 @@ public class Channel
 
     public string path()
     {
-        return (string)_path;
+        return _pty.name();
     }
 
     public void setSerialStatus( int s )
@@ -127,42 +113,31 @@ public class Channel
     public void deliverData( void* data, int len )
     {
         debug( "deliverData()" );
-        ssize_t byteswritten = PosixExtra.write( _ptyfd, data, len );
-        if ( (int)byteswritten < len )
+        int byteswritten = _pty.write( data, len );
+        if ( byteswritten < len )
         {
-            error( "could only write %d bytes to pty. buffer overrun!", (int)byteswritten );
+            error( "could only write %d bytes to pty. buffer overrun!", byteswritten );
         }
     }
 
     //
     // callbacks
     //
-    public bool action_from_master( IOChannel source, IOCondition condition )
+    public void onRead( Serial serial )
     {
-        if ( condition == IOCondition.IN )
-        {
-            debug( "can read from fd %d", source.unix_get_fd() );
-
-            var buffer = new char[8192];
-            ssize_t bytesread = PosixExtra.read( _ptyfd, buffer, 8192 );
-
-            debug( "read %d bytes from fd %d: %s", (int)bytesread, _ptyfd, (string)buffer );
+        debug( "can read from Pty" );
+        var buffer = new char[8192];
+        int bytesread = serial.read( buffer, 8192 );
+        debug( "read %d bytes from fd %d: %s", bytesread, serial.fileno(), (string)buffer );
 
             if (_multiplexer != null )
                 _multiplexer.submit_data( _number, buffer, (int)bytesread );
-        }
-        else if ( condition == IOCondition.HUP )
-        {
-            debug( "got HUP from fd %d", source.unix_get_fd() );
-            close();
-        }
-        return ( condition == IOCondition.IN );
     }
 
-    public bool action_from_slave( IOChannel source, IOCondition condition )
+    public void onHup( Serial serial )
     {
-        debug( "action from slave w/ condition %d", condition );
-        return false;
+        debug( "got HUP from fd %d", serial.fileno() );
+        close();
     }
 
 }
