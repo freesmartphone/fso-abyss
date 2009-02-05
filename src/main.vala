@@ -57,7 +57,7 @@ void main()
             server = new Server();
             conn.register_object( MUXER_OBJ_PATH, server );
 
-            PosixExtra.signal( PosixExtra.SIGINT, SIGINT_handler );
+            Posix.signal( Posix.SIGINT, SIGINT_handler );
 
             loop.run();
         }
