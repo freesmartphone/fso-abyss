@@ -119,7 +119,7 @@ public class Channel
             error( "could only write %d bytes to pty. buffer overrun!", byteswritten );
         }
         debug( "...OK sent %d bytes to %d", byteswritten, _pty.fileno() );
-        //MainContext.default().iteration( true );
+        MainContext.default().iteration( false ); // give other channels a chance (round-robin)
     }
 
     //

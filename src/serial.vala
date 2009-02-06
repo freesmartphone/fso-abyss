@@ -223,7 +223,10 @@ public class Serial : Object
     public bool _writeCallback( IOChannel source, IOCondition condition )
     {
         debug( "_writeCallback, condition = %d", condition );
-        var byteswritten = _write( _buffer.data, (int)_buffer.len );
+
+        int len = 64 > _buffer.len? (int)_buffer.len : 64;
+
+        var byteswritten = _write( _buffer.data, len  );
         debug( "_writeCallback: wrote %d bytes", (int)byteswritten );
         _buffer.remove_range( 0, (int)byteswritten );
 
