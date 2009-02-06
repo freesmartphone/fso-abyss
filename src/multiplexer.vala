@@ -439,9 +439,14 @@ public class Multiplexer
     public void deliver_data( int channel, void* data, int len )
     {
         debug( "0710 -> deliver %d bytes for channel %d", len, channel );
-
-        assert( vc[channel] != null && vc[channel].status() != Channel.Status.Requested );
-        vc[channel].deliverData( data, len );
+        if ( vc[channel] == null || vc[channel].status() == Channel.Status.Requested )
+        {
+            debug( "::::should deliver bytes before channel clear to send: ignoring" );
+        }
+        else
+        {
+            vc[channel].deliverData( data, len );
+        }
     }
 
     public void deliver_status( int channel, int serial_status )
