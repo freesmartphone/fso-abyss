@@ -5,13 +5,8 @@
 [CCode (cprefix = "", lower_case_cprefix = "")]
 namespace PosixExtra {
 
-
-
-
     [CCode (cheader_filename = "sys/ioctl.h")]
     public const int TIOCMBIS;
-
-
 
 	[CCode (cheader_filename = "fcntl.h")]
 	public const int O_ACCMODE;
@@ -402,9 +397,13 @@ namespace PosixExtra {
     [CCode (cheader_filename = "termios.h")]
     public int tcflow (int fd, int action);
 
-    /* ------------- tty --------------- */
+    /* ------------- unistd --------------- */
     [CCode (cheader_filename = "unistd.h")]
     int ttyname_r (int fd, char[] buf);
+
+    [CCode (cheader_filename = "unistd.h")]
+    uint sleep (uint seconds);
+
 
 }
 

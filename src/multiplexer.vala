@@ -281,8 +281,8 @@ public class Multiplexer
         termios.c_oflag &= ~PosixExtra.OPOST;
 
         // no special character handling
-        termios.c_cc[PosixExtra.VMIN] = 0;
-        termios.c_cc[PosixExtra.VTIME] = 10;
+        termios.c_cc[PosixExtra.VMIN] = 1;
+        termios.c_cc[PosixExtra.VTIME] = 0;
         termios.c_cc[PosixExtra.VINTR] = 0;
         termios.c_cc[PosixExtra.VQUIT] = 0;
         termios.c_cc[PosixExtra.VSTART] = 0;

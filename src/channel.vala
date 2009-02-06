@@ -112,12 +112,14 @@ public class Channel
 
     public void deliverData( void* data, int len )
     {
-        debug( "deliverData()" );
+        debug( "deliverData()..." );
         int byteswritten = _pty.write( data, len );
         if ( byteswritten < len )
         {
             error( "could only write %d bytes to pty. buffer overrun!", byteswritten );
         }
+        debug( "...OK sent %d bytes to %d", byteswritten, _pty.fileno() );
+        //MainContext.default().iteration( true );
     }
 
     //
@@ -130,8 +132,8 @@ public class Channel
         int bytesread = serial.read( buffer, 8192 );
         debug( "read %d bytes from fd %d: %s", bytesread, serial.fileno(), (string)buffer );
 
-            if (_multiplexer != null )
-                _multiplexer.submit_data( _number, buffer, (int)bytesread );
+        if (_multiplexer != null )
+            _multiplexer.submit_data( _number, buffer, (int)bytesread );
     }
 
     public void onHup( Serial serial )
