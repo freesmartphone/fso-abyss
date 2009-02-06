@@ -1,3 +1,7 @@
+2009-02-06	Michael Lauer	<mlauer@vanille-media.de>
+
+	* Released as 0.2.0
+
 2009-02-04	Michael Lauer	<mlauer@vanille-media.de>
 
 	* org.freesmartphone.GSM.MUX.OpenSession no longer returns a parameter,
