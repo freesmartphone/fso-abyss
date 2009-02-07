@@ -44,16 +44,20 @@ namespace CONST
     }
 
     //===========================================================================
-    public void hexdebug( void* data, int len )
+    public void hexdebug( bool write, void* data, int len )
     {
         if ( len < 1 )
             return;
+
+        int BYTES_PER_LINE = 16;
+
         uchar* pointer = (uchar*) data;
-        var hexline = new StringBuilder();
+        var hexline = new StringBuilder( write? ">>> " : "<<< " );
         var ascline = new StringBuilder();
         uchar b;
+        int i;
 
-        for ( int i = 0; i < len; ++i )
+        for ( i = 0; i < len; ++i )
         {
             b = pointer[i];
             hexline.append_printf( "%02X ", b );
@@ -61,8 +65,14 @@ namespace CONST
                 ascline.append_printf( "%c", b );
             else
                 ascline.append_printf( "." );
+            if ( i % BYTES_PER_LINE+1 == BYTES_PER_LINE )
+            {
+                debug( hexline.str + " " + ascline.str );
+                hexline = new StringBuilder( write? ">>> " : "<<< " );
+                ascline = new StringBuilder();
+            }
         }
-        debug( hexline.str + " " + ascline.str );
+        if ( i % BYTES_PER_LINE+1 != BYTES_PER_LINE )
+            debug( hexline.str + " " + ascline.str );
     }
-
 }

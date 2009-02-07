@@ -308,7 +308,7 @@ public class Multiplexer
             return false;
         ssize_t bwritten = PosixExtra.write( fd, command, command.size() );
         PosixExtra.tcdrain( portfd );
-        debug( "::writefd written %d bytes", (int)bwritten );
+        debug( ":::writefd written %d bytes", (int)bwritten );
         return ( (int)bwritten == command.size() );
     }
 
@@ -325,7 +325,7 @@ public class Multiplexer
         if ( res < 0 || !readfds.isSet( fd ) )
             return "";
         ssize_t bread = PosixExtra.read( fd, buffer, 512 );
-        debug( "::readfd read %d bytes", (int)bread );
+        debug( ":::readfd read %d bytes", (int)bread );
         return (string) buffer;
     }
 
@@ -381,7 +381,7 @@ public class Multiplexer
         while ( readfd( portfd ) != "" ) ;
 
         // first, send something to wake up
-        writefd( "AT\r\n", portfd );
+        writefd( "ATE0Q0V1\r\n", portfd );
         // then, read until there is nothing to read
         while ( readfd( portfd ) != "" ) ;
         // now, write the actual command
@@ -415,7 +415,7 @@ public class Multiplexer
         debug( "0710 -> should read max %d bytes to %p", len, data );
         var number = PosixExtra.read( portfd, data, len );
         debug( "read %d bytes from fd %d", (int)number, portfd );
-        hexdebug( data, (int)number );
+        hexdebug( false, data, (int)number );
         if ( number == -1 )
             error( "read error fd %d: %s", portfd, Posix.strerror( Posix.errno ) );
         return (int)number;
@@ -424,7 +424,7 @@ public class Multiplexer
     public bool write( void* data, int len )
     {
         debug( "0710 -> should write %d bytes", len );
-        hexdebug( data, len );
+        hexdebug( true, data, len );
         var number = PosixExtra.write( portfd, data, len );
         // FIXME: necessary always?
         PosixExtra.tcdrain( portfd );
@@ -467,7 +467,7 @@ public class Multiplexer
 
     public void debug_message( string msg )
     {
-        debug( "debug messages from 0710 core: '%s", msg );
+        debug( "0710 -> say '%s", msg );
     }
 
     public void open_channel( int channel )

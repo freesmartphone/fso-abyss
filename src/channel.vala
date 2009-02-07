@@ -138,7 +138,7 @@ public class Channel
         debug( "%s: can read from Pty", repr() );
         var buffer = new char[8192];
         int bytesread = serial.read( buffer, 8192 );
-        debug( ":::read %d bytes from fd %d: %s", bytesread, serial.fileno(), (string)buffer );
+        debug( ":::read %d bytes", bytesread );
 
         if (_multiplexer != null )
             _multiplexer.submit_data( _number, buffer, (int)bytesread );

@@ -72,11 +72,6 @@ public class Serial : Object
             Posix.close( _portfd );
     }
 
-    public int fileno()
-    {
-        return _portfd;
-    }
-
     public bool isOpen()
     {
         return ( _portfd != -1 );
@@ -99,7 +94,7 @@ public class Serial : Object
         }
         if ( _portfd == -1 )
         {
-            warning( "could not open %s: %s", _portname, Posix.strerror( Posix.errno ) );
+            warning( "%s: could not open %s: %s", repr(), _portname, Posix.strerror( Posix.errno ) );
             return false;
         }
 
@@ -112,7 +107,7 @@ public class Serial : Object
             int flags = Posix.fcntl( _portfd, Posix.F_GETFL );
             int res = Posix.fcntl( _portfd, Posix.F_SETFL, flags | Posix.O_NONBLOCK );
             if ( res < 0 )
-                warning( "can't set pty master to NONBLOCK" );
+                warning( "%s: can't set pty master to NONBLOCK: %s", repr(), Posix.strerror( Posix.errno ) );
         }
 
         Posix.fcntl( _portfd, Posix.F_SETFL, 0 );
@@ -127,7 +122,7 @@ public class Serial : Object
             PosixExtra.cfsetospeed( termios, PosixExtra.B115200 );
         }
         else
-            warning( "portspeed != 115200" );
+            warning( "%s: portspeed != 115200", repr() );
 
         // local read
         termios.c_cflag |= (PosixExtra.CLOCAL | PosixExtra.CREAD);
@@ -203,10 +198,10 @@ public class Serial : Object
         var temp = new uint8[len];
         Memory.copy( temp, data, len );
         _buffer.append( temp );
-        debug( "current buffer length = %d", (int)_buffer.len );
+        //debug( "current buffer length = %d", (int)_buffer.len );
         if ( restart )
         {
-            debug( "restarting writer" );
+            //debug( "restarting writer" );
             _writeWatch = _channel.add_watch( IOCondition.OUT, _writeCallback );
         }
         return len;
@@ -214,7 +209,7 @@ public class Serial : Object
 
     public bool _actionCallback( IOChannel source, IOCondition condition )
     {
-        debug( "_actionCallback, condition = %d", condition );
+        //debug( "_actionCallback, condition = %d", condition );
         if ( IOCondition.IN == condition && _readfunc != null )
         {
             _readfunc( this );
@@ -227,12 +222,12 @@ public class Serial : Object
 
     public bool _writeCallback( IOChannel source, IOCondition condition )
     {
-        debug( "_writeCallback, condition = %d", condition );
+        //debug( "_writeCallback, condition = %d", condition );
 
         int len = 64 > _buffer.len? (int)_buffer.len : 64;
 
         var byteswritten = _write( _buffer.data, len  );
-        debug( "_writeCallback: wrote %d bytes", (int)byteswritten );
+        //debug( "_writeCallback: wrote %d bytes", (int)byteswritten );
         _buffer.remove_range( 0, (int)byteswritten );
 
         return ( _buffer.len != 0 );
