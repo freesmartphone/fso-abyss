@@ -156,8 +156,7 @@ public class Multiplexer
         debug( "closeSession" );
         for ( int i = 1; i < MAX_CHANNELS; ++i )
             if ( vc[i] != null )
-                if ( vc[i].status() == Channel.Status.Acked )
-                    vc[i].close();
+                vc[i].close();
 
         ctx.shutdown();
 
@@ -173,18 +172,14 @@ public class Multiplexer
         {
             // find the first free one
             int i = 1;
-            while ( channel == 0 && i < MAX_CHANNELS )
-            {
-                if ( vc[i] != null && vc[i].status() != Channel.Status.Shutdown )
-                    i++;
-                else
-                    channel = i;
-            }
+            while ( channel == 0 && i < MAX_CHANNELS && vc[i] != null )
+                ++i;
+            channel = i;
         }
 
         debug( "allocChannel requested for name %s, requested channel %d", name, channel );
         // lets check whether we already have this channel
-        if ( vc[channel] != null && vc[channel].status() != Channel.Status.Shutdown )
+        if ( vc[channel] != null )
             throw new MuxerError.ChannelTaken( "Channel is already taken." );
 
         var ok = ctx.openChannel( channel );
@@ -203,17 +198,20 @@ public class Multiplexer
         do
         {
             mc.iteration( false );
-            ack = ( vc[channel].status() == Channel.Status.Acked );
+            ack = ( vc[channel].isAcked() );
         }
         while ( !ack && t.elapsed() < GSM_OPEN_CHANNEL_ACK_TIMEOUT );
 
         if ( ack )
         {
             path = vc[channel].path();
-            allocated_channel = chan;
+            allocated_channel = channel;
         }
         else
+        {
+            vc[channel] = null;
             throw new MuxerError.NoChannel( "Modem does not provide this channel." );
+        }
     }
 
     public void releaseChannel( string name ) throws GLib.Error
@@ -370,6 +368,7 @@ public class Multiplexer
     {
         debug( "channel -> closed" );
         ctx.closeChannel( channel );
+        vc[channel] = null;
     }
 
     //
@@ -439,9 +438,9 @@ public class Multiplexer
     public void deliver_data( int channel, void* data, int len )
     {
         debug( "0710 -> deliver %d bytes for channel %d", len, channel );
-        if ( vc[channel] == null || vc[channel].status() == Channel.Status.Requested )
+        if ( vc[channel] == null )
         {
-            debug( "::::should deliver bytes before channel clear to send: ignoring" );
+            debug( "::::should deliver bytes for unknown channel: ignoring" );
         }
         else
         {
@@ -453,12 +452,17 @@ public class Multiplexer
     {
         string status = serialStatusToString( serial_status );
         debug( "0710 -> deliver status %d = '%s' for channel %d", serial_status, status, channel );
-        assert( vc[channel] != null );
-        if ( vc[channel].status() == Channel.Status.Requested )
+        if ( vc[channel] == null )
         {
-            vc[channel].acked();
+            debug( ":::should deliver status for unknown channel: ignoring" );
         }
-        server.Status( channel, status );
+        else
+        {
+            if ( !vc[channel].isAcked() )
+                vc[channel].acked();
+
+            server.Status( channel, status );
+        }
     }
 
     public void debug_message( string msg )

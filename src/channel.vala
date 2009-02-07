@@ -50,26 +50,31 @@ public class Channel
 
     public Channel( Multiplexer? multiplexer, string name, int number )
     {
-        debug( "Channel %s = %d created", name, number );
         _multiplexer = multiplexer;
         _status = Status.Requested;
         _name = name;
         _number = number;
+        debug( "%s: constructed", repr() );
     }
 
     ~Channel()
     {
-        debug( "Channel %s = %d destructed", _name, _number );
+        debug( "%s: destructed", repr() );
+    }
+
+    public string repr()
+    {
+        return "<Channel %d (%s) connected via %s>".printf( _number, _name, _pty != null? _pty.name() : "(none)" );
     }
 
     public string acked()
     {
-        debug( "Channel now acked! creating pty" );
+        debug( "%s: acked; creating pty", repr() );
 
         _pty = new Pty( onHup, onRead );
         if ( !_pty.openRaw() )
         {
-             debug( "could not open pty: %s", Posix.strerror( Posix.errno ) );
+             debug( ":::could not open pty: %s", Posix.strerror( Posix.errno ) );
              return "";
         }
 
@@ -79,13 +84,22 @@ public class Channel
 
     public void close()
     {
-        debug( "close()" );
+        debug( "%s: close()", repr() );
+
+        var oldstatus = _status;
         _status = Status.Shutdown;
-        // notify multiplexer
-        if (_multiplexer != null )
-            _multiplexer.channel_closed( _number );
-        _pty.close();
-        _pty = null;
+
+        if ( oldstatus != Status.Requested )
+        {
+            if (_multiplexer != null )
+                _multiplexer.channel_closed( _number );
+        }
+
+        if ( _pty != null )
+        {
+            _pty.close();
+            _pty = null;
+        }
     }
 
     public string name()
@@ -93,14 +107,14 @@ public class Channel
         return _name;
     }
 
-    public Status status()
-    {
-        return _status;
-    }
-
     public string path()
     {
         return _pty.name();
+    }
+
+    public bool isAcked()
+    {
+        return _status != Status.Requested;
     }
 
     public void setSerialStatus( int s )
@@ -112,25 +126,19 @@ public class Channel
 
     public void deliverData( void* data, int len )
     {
-        debug( "deliverData()..." );
-        int byteswritten = _pty.write( data, len );
-        if ( byteswritten < len )
-        {
-            error( "could only write %d bytes to pty. buffer overrun!", byteswritten );
-        }
-        debug( "...OK sent %d bytes to %d", byteswritten, _pty.fileno() );
+        _pty.write( data, len );
         MainContext.default().iteration( false ); // give other channels a chance (round-robin)
     }
 
     //
-    // callbacks
+    // delegates from Pty object
     //
     public void onRead( Serial serial )
     {
-        debug( "can read from Pty" );
+        debug( "%s: can read from Pty", repr() );
         var buffer = new char[8192];
         int bytesread = serial.read( buffer, 8192 );
-        debug( "read %d bytes from fd %d: %s", bytesread, serial.fileno(), (string)buffer );
+        debug( ":::read %d bytes from fd %d: %s", bytesread, serial.fileno(), (string)buffer );
 
         if (_multiplexer != null )
             _multiplexer.submit_data( _number, buffer, (int)bytesread );
@@ -138,7 +146,7 @@ public class Channel
 
     public void onHup( Serial serial )
     {
-        debug( "got HUP from fd %d", serial.fileno() );
+        debug( "%s: got HUP from Pty", repr() );
         close();
     }
 

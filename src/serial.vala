@@ -46,16 +46,21 @@ public class Serial : Object
 
     public Serial( string portname, uint portspeed, HupFunc? hupfunc, ReadFunc? readfunc )
     {
-        debug( "Serial Port %s (%u) created", portname, portspeed );
         _portname = portname;
         _portspeed = portspeed;
         _hupfunc = hupfunc;
         _readfunc = readfunc;
+        debug( "%s: constructed", repr() );
     }
 
     ~Serial()
     {
-        debug( "Serial Port %s (%u) destructed", _portname, _portspeed );
+        debug( "%s: destructed", repr() );
+    }
+
+    public string repr()
+    {
+        return "<Serial %s (%u)>".printf( _portname, _portspeed );
     }
 
     public void close()
