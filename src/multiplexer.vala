@@ -112,7 +112,6 @@ public class Multiplexer
 
     public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_, Server server_ )
     {
-        debug( "Multiplexer created for mode %s, framesize %d, device %s @ %d", advanced? "advanced":"basic", framesize, portname_, portspeed_ );
         portname = portname_;
         portspeed = portspeed_;
         server = server_;
@@ -137,11 +136,23 @@ public class Multiplexer
         ctx.close_channel = close_channel_fwd;
         ctx.terminate = terminate_fwd;
         ctx.response_to_test = response_to_test_fwd;
+
+        debug( "%s: constructed", repr() );
+    }
+
+    ~Multiplexer()
+    {
+        debug( "%s: destructed", repr() );
+    }
+
+    public string repr()
+    {
+        return "<Multiplexer 07.10-%s Framesize %d via %s @ %d>".printf( ( ctx.mode == 1? "advanced":"basic" ), ctx.frame_size, portname, ctx.port_speed );
     }
 
     public bool initSession()
     {
-        debug( "initSession" );
+        debug( "%s: init session", repr() );
 
         if ( !openSerial() )
             return false;
