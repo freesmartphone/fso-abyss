@@ -82,6 +82,12 @@ public static void terminate_fwd( Context ctx )
     m.terminate();
 }
 
+public static void response_to_test_fwd( Context ctx, char[] data )
+{
+    Multiplexer m = (Multiplexer) ctx.user_data;
+    m.response_to_test( data );
+}
+
 //===========================================================================
 // The Multiplexer class
 //
@@ -124,7 +130,7 @@ public class Multiplexer
         ctx.open_channel = open_channel_fwd;
         ctx.close_channel = close_channel_fwd;
         ctx.terminate = terminate_fwd;
-
+        ctx.response_to_test = response_to_test_fwd;
     }
 
     public bool initSession()
@@ -140,15 +146,26 @@ public class Multiplexer
         // make sure we're out of MUX mode
         ctx.shutdown();
 
+        bool ok;
+
         if ( ctx.mode == 0 )
         {
-            at_command( "AT+CMUX=0\r\n" );
-            return ctx.startup( false );
+            if (!at_command( "AT+CMUX=0\r\n" ) )
+                return false;
+            ok = ctx.startup( false );
         }
         else
         {
-            return ctx.startup( true );
+            ok = ctx.startup( true );
         }
+
+        return ok;
+
+        /*
+        if (ok)
+        {
+            Timeout.add_seconds( 5 );
+        */
     }
 
     public void closeSession()
@@ -237,6 +254,12 @@ public class Multiplexer
             throw new MuxerError.NoChannel( "Could not find channel with that index." );
 
         // FIXME: ...
+    }
+
+    public void testCommand( string data ) throws GLib.Error
+    {
+        debug( "muxer: testCommand" );
+        ctx.sendTest( data, (int)data.size() );
     }
 
     //
@@ -485,6 +508,13 @@ public class Multiplexer
         debug( "0710 -> terminate" );
     }
 
+    public void response_to_test( char[] data )
+    {
+        var b = new StringBuilder();
+        foreach( var c in data )
+            b.append_printf( "%c", c );
+        debug( "0710 -> response to test (%d bytes): %s", data.length, b.str );
+    }
     //
     // callbacks from glib
     //

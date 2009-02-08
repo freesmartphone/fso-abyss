@@ -125,21 +125,10 @@ public class Server : Object
         }
     }
 
-    public struct Keule
+    public void TestCommand( string data ) throws DBus.Error, GLib.Error
     {
-        public int foo;
-        public string bar;
-    }
-
-    public Keule TestOpenChannel( Keule k )
-    {
-        debug( "got keule: %d, %s", k.foo, k.bar );
-        //var c = new Channel( null, "foo", 10 );
-        //c.acked();
-        Keule keule = { 10, "yo Kurt" };
-        //keule.foo = 10;
-        //keule.bar = "yo kurt";
-        return keule;
+        debug( "TestCommand: %s", data );
+        muxer.testCommand( data );
     }
 
 }

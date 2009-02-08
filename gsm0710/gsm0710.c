@@ -51,6 +51,7 @@ void gsm0710_initialize(struct gsm0710_context *ctx)
     ctx->close_channel = 0;
     ctx->terminate = 0;
     ctx->packet_filter = 0;
+    ctx->response_to_test = 0;
 }
 
 /* Determine if a channel is in use */
@@ -290,6 +291,12 @@ static int gsm0710_packet( struct gsm0710_context *ctx, int channel, int type,
                 memcpy(resp, data, len);
                 resp[0] = (char)0x41;   /* Clear the C/R bit in the response */
                 gsm0710_write_frame(ctx, 0, GSM0710_DATA, resp, len);
+            }
+            else if (len >= 2 && data[0] == (char) (GSM0710_CMD_TEST | GSM0710_EA))
+            {
+                /* Response for a test command we sent */
+                if (ctx->response_to_test)
+                    (*(ctx->response_to_test))(ctx, &data[2], len-2);
             }
         }
 
@@ -602,4 +609,19 @@ void gsm0710_set_status(struct gsm0710_context *ctx, int channel, int status)
     data[2] = (char)((channel << 2) | 0x03);
     data[3] = (char)status;
     gsm0710_write_frame(ctx, 0, GSM0710_DATA, data, 4);
+}
+
+/* Test command */
+void gsm0710_send_test(struct gsm0710_context* ctx, const void* testdata, int len)
+{
+    if (len > ctx->frame_size)
+    {
+        gsm0710_debug(ctx, "*** GSM 07.10 truncating test command ***");
+        len = ctx->frame_size-4;
+    }
+    char data[len+2];
+    data[0] = (char)GSM0710_CMD_TEST | GSM0710_CR | GSM0710_EA;
+    data[1] = (char)GSM0710_EA | (len << 1);
+    memcpy(&data[2], testdata, len);
+    gsm0710_write_frame(ctx, 0, GSM0710_DATA, data, len+2);
 }

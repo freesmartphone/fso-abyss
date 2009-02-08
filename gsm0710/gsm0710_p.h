@@ -33,6 +33,12 @@ extern "C" {
 #define GSM0710_MODE_BASIC              0
 #define GSM0710_MODE_ADVANCED           1
 
+/* Atoms */
+#define GSM0710_CMD_TEST 0x20
+#define GSM0710_PF 0x10
+#define GSM0710_CR 0x02
+#define GSM0710_EA 0x01
+
 /* Frame types and subtypes */
 #define GSM0710_OPEN_CHANNEL            0x3F
 #define GSM0710_CLOSE_CHANNEL           0x53
@@ -42,6 +48,7 @@ extern "C" {
 #define GSM0710_STATUS_ACK              0xE1
 #define GSM0710_TERMINATE_BYTE1         0xC3
 #define GSM0710_TERMINATE_BYTE2         0x01
+
 
 /* Additional Frame types and subtypes */
 #define GSM0710_SABM                    0x2F
@@ -70,6 +77,7 @@ typedef    void    (*gsm0710_context_open_channel_callback)(struct gsm0710_conte
 typedef    void    (*gsm0710_context_close_channel_callback)(struct gsm0710_context *ctx, int channel);
 typedef    void    (*gsm0710_context_terminate_callback)(struct gsm0710_context *ctx);
 typedef    int     (*gsm0710_context_packet_filter_callback)(struct gsm0710_context *ctx, int channel, int type, const char *data, int len);
+typedef    void     (*gsm0710_context_response_to_test_callback)(struct gsm0710_context *ctx, const char *data, int len);
 
 struct gsm0710_context
 {
@@ -98,6 +106,7 @@ struct gsm0710_context
     gsm0710_context_close_channel_callback close_channel;
     gsm0710_context_terminate_callback terminate;
     gsm0710_context_packet_filter_callback packet_filter;
+    gsm0710_context_response_to_test_callback response_to_test;
 };
 
 void gsm0710_initialize(struct gsm0710_context *ctx);
@@ -112,6 +121,8 @@ void gsm0710_write_frame(struct gsm0710_context *ctx, int channel, int type, con
 void gsm0710_write_data(struct gsm0710_context *ctx, int channel, const void *data, int len);
 void gsm0710_set_status(struct gsm0710_context *ctx, int channel, int status);
 int gsm0710_compute_crc(const char *data, int len);
+
+void gsm0710_send_test(struct gsm0710_context* ctx, const void* testdata, int len);
 
 #ifdef __cplusplus
 };

@@ -41,6 +41,7 @@ namespace Gsm0710
     public static delegate void close_channel_t( Context ctx, int channel );
     public static delegate void terminate_t( Context ctx );
     public static delegate bool packet_filter_t( Context ctx, int channel, int type, char* data, int len );
+    public static delegate void response_to_test_t( Context ctx, char[] data ); /*char* data, int len );*/
 
     [CCode (cname = "struct gsm0710_context", free_function = "")]
     [Compact]
@@ -56,11 +57,10 @@ namespace Gsm0710
         // not mapping unsingedl long used_channels[];
         // not mapping const char* reinit_detect;
         // not mapping int reinit_detect_len;
-
-        /* Hooks to other levels */
         public void* user_data;
         public int fd;
 
+        /* Callbacks */
         public at_command_t at_command;
         public read_t read;
         public write_t write;
@@ -71,7 +71,9 @@ namespace Gsm0710
         public close_channel_t close_channel;
         public terminate_t terminate;
         public packet_filter_t packet_filter;
+        public response_to_test_t response_to_test;
 
+        /* Commands */
         [CCode (cname = "gsm0710_initialize")]
         public void initialize();
 
@@ -98,5 +100,8 @@ namespace Gsm0710
 
         [CCode (cname = "gsm0710_set_status")]
         public void setStatus( int channel, int status );
+
+        [CCode (cname = "gsm0710_send_test")]
+        public void sendTest( void* data, int len );
     }
 }
