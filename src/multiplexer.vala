@@ -102,6 +102,8 @@ public class Multiplexer
     uint portwatch;
     uint portspeed;
 
+    uint pingwatch;
+
     Channel[] vc = new Channel[MAX_CHANNELS];
 
     public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_, Server server_ )
@@ -159,13 +161,10 @@ public class Multiplexer
             ok = ctx.startup( true );
         }
 
-        return ok;
-
-        /*
         if (ok)
-        {
-            Timeout.add_seconds( 5 );
-        */
+            Timeout.add_seconds( GSM_PING_SEND_TIMEOUT, protocol_ping_send_timeout );
+
+        return ok;
     }
 
     public void closeSession()
@@ -378,6 +377,12 @@ public class Multiplexer
         return sb.str;
     }
 
+    public void clearPingResponseTimeout()
+    {
+        if ( pingwatch != 0 )
+            Source.remove( pingwatch );
+    }
+
     //
     // callbacks from channel
     //
@@ -469,6 +474,7 @@ public class Multiplexer
         {
             vc[channel].deliverData( data, len );
         }
+        clearPingResponseTimeout();
     }
 
     public void deliver_status( int channel, int serial_status )
@@ -486,6 +492,7 @@ public class Multiplexer
 
             server.Status( channel, status );
         }
+        clearPingResponseTimeout();
     }
 
     public void debug_message( string msg )
@@ -514,6 +521,7 @@ public class Multiplexer
         foreach( var c in data )
             b.append_printf( "%c", c );
         debug( "0710 -> response to test (%d bytes): %s", data.length, b.str );
+        clearPingResponseTimeout();
     }
     //
     // callbacks from glib
@@ -526,5 +534,22 @@ public class Multiplexer
         ctx.readyRead();
 
         return true; // call me again
+    }
+
+    public bool protocol_ping_response_timeout()
+    {
+        debug( "\n*\n*\n* PING TIMEOUT !!!\n*\n*\n*" );
+        return true;
+    }
+
+    public bool protocol_ping_send_timeout()
+    {
+        var data = new char[] { 'P', 'I', 'N', 'G' };
+        ctx.sendTest( data, data.length );
+
+        if ( pingwatch != 0 )
+            Source.remove( pingwatch );
+        pingwatch = Timeout.add_seconds( GSM_PING_RESPONSE_TIMEOUT, protocol_ping_response_timeout );
+        return true;
     }
 }
