@@ -1,12 +1,39 @@
 Todo:
+=====
  * Handle serial control
  * Add hook for channel ACK
- * Check auto-reinit in protocol engine
+ * Finish auto-reinit in protocol engine
+ * Finish ping framework
  * Check PSC commands
- * Check Testing commands
  * Check SIEMENS version check extension
  * Use Serial object in multiplexer as well
 
 Problems due to Vala:
+=====================
  * No async dbus on server side
  * No proper dbus errors
+
+Features of this Multiplexer:
+=============================
+ * Clean Architecture seperating
+   - Protocol engine,
+   - Serial port,
+   - Virtual Channel,
+   - Session handling, and
+   - DBus Server.
+ * No modem power nor init handling -- expects
+   that this has been already setup for us.
+ * Top priority is getting frames from the modem,
+   so it doesn't need to wait for us.
+ * No channel ACK race conditions, a pty will only be allocated
+   if we get serial status packages from them muxer.
+ * No pty overruns possible [as long as we have memory],
+   channels will buffer everything in memory and deliver
+   the chunks asynchronous.
+ * Supports requesting individual channels in addition to
+   the 'the next free one'. This is helpful since virtual
+   channels keep state over opening/closing.
+ * Ping framework (on modems that support it) for detecting
+   stuck connections and transparent reinit.
+ * AT-Command-based diagnostic interface
+ * Workarounds for Modem-specific quirks
