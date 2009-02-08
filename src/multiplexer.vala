@@ -420,7 +420,7 @@ public class Multiplexer
                 debug( "channel has been idle for %.2f seconds, waking up", elapsed );
                 var wakeup = new char[] { 'W', 'A', 'K', 'E', 'U', 'P', '!' };
                 ctx.sendTest( wakeup, wakeup.length );
-                Thread.usleep( idle_wakeup_waitms );
+                Thread.usleep( 1000 * idle_wakeup_waitms );
             }
         }
 
