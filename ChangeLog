@@ -1,3 +1,12 @@
+2009-02-08	Michael Lauer	<mlauer@vanille-media.de>
+
+	* Add support for a wakeup threshold. Some modems (such as the TI Calypso)
+	  do not use standardized PSC commands to handle power saving states. For
+	  such modems, org.freesmartphone.GSM.MUX.SetWakeupThreshold( seconds, waitms )
+	  can be used. Seconds defines the acceptable duration (idleness), before the
+	  modem will be woken up, waitms defines the sleep period (in microseconds)
+	  after sending the wakeup command.
+
 2009-02-06	Michael Lauer	<mlauer@vanille-media.de>
 
 	* Released as 0.2.0
@@ -23,7 +32,7 @@
 	* This project has a name now. It's called 'fso-abyss', which
 	  is a reminiscent of the popular ILM movie 'Abyss' where
 	  the beast was hidden in the deep blue ocean, but later turned
-	  out to actually be friendly.
+	  out to be friendly.
 	* Reading and writing data from/to virtual channels works now.
 	* Data gets nicely forwarded to our ptys.
 

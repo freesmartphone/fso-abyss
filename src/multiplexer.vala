@@ -104,6 +104,10 @@ public class Multiplexer
 
     uint pingwatch;
 
+    Timer idle_wakeup_timer;
+    uint idle_wakeup_threshold;
+    uint idle_wakeup_waitms;
+
     Channel[] vc = new Channel[MAX_CHANNELS];
 
     public Multiplexer( bool advanced, int framesize, string portname_, int portspeed_, Server server_ )
@@ -161,8 +165,10 @@ public class Multiplexer
             ok = ctx.startup( true );
         }
 
+        /*
         if (ok)
             Timeout.add_seconds( GSM_PING_SEND_TIMEOUT, protocol_ping_send_timeout );
+        */
 
         return ok;
     }
@@ -253,6 +259,22 @@ public class Multiplexer
             throw new MuxerError.NoChannel( "Could not find channel with that index." );
 
         // FIXME: ...
+    }
+
+    public void setWakeupThreshold( int seconds, int waitms ) throws GLib.Error
+    {
+        if ( seconds < 0 ) /* disable */
+            idle_wakeup_timer = null;
+
+        if ( idle_wakeup_timer == null )
+        {
+            idle_wakeup_timer = new Timer();
+            idle_wakeup_timer.start();
+        }
+
+        idle_wakeup_threshold = seconds;
+        idle_wakeup_waitms = waitms;
+
     }
 
     public void testCommand( string data ) throws GLib.Error
@@ -389,6 +411,19 @@ public class Multiplexer
     public void submit_data( int channel, void* data, int len )
     {
         debug( "channel -> submit_data" );
+
+        if ( idle_wakeup_timer != null )
+        {
+            var elapsed = idle_wakeup_timer.elapsed();
+            if ( elapsed > idle_wakeup_threshold )
+            {
+                debug( "channel has been idle for %.2f seconds, waking up", elapsed );
+                var wakeup = new char[] { 'W', 'A', 'K', 'E', 'U', 'P', '!' };
+                ctx.sendTest( wakeup, wakeup.length );
+                Thread.usleep( idle_wakeup_waitms );
+            }
+        }
+
         ctx.writeDataForChannel( channel, data, len );
     }
 
@@ -441,6 +476,9 @@ public class Multiplexer
     public int read( void* data, int len )
     {
         debug( "0710 -> should read max %d bytes to %p", len, data );
+        if ( idle_wakeup_timer != null )
+            idle_wakeup_timer.reset();
+
         var number = PosixExtra.read( portfd, data, len );
         debug( "read %d bytes from fd %d", (int)number, portfd );
         hexdebug( false, data, (int)number );
@@ -452,6 +490,9 @@ public class Multiplexer
     public bool write( void* data, int len )
     {
         debug( "0710 -> should write %d bytes", len );
+        if ( idle_wakeup_timer != null )
+            idle_wakeup_timer.reset();
+
         hexdebug( true, data, len );
         var number = PosixExtra.write( portfd, data, len );
         // FIXME: necessary always?

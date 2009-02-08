@@ -61,6 +61,7 @@ public class Server : Object
             muxer = new Multiplexer( advanced, framesize, port, portspeed, this );
             if ( !muxer.initSession() )
             {
+                muxer = null;
                 throw new MuxerError.SessionOpenError( "Can't initialize the session" );
             }
         }
@@ -107,10 +108,26 @@ public class Server : Object
             muxer.releaseChannel( name );
     }
 
+    public void SetWakeupThreshold( int seconds, int waitms ) throws DBus.Error, GLib.Error
+    {
+        debug( "SetWakeupThreshold to wakeup before transmitting data after %d seconds of idleness", seconds );
+        if ( muxer == null )
+        {
+            throw new MuxerError.NoSession( "Session has to be initialized first." );
+        }
+        else
+            muxer.setWakeupThreshold( seconds, waitms );
+    }
+
     public void SetStatus( int channel, string status ) throws DBus.Error, GLib.Error
     {
         debug( "SetStatus requested for channel %d, status = %s", channel, status );
-        muxer.setStatus( channel, status );
+        if ( muxer == null )
+        {
+            throw new MuxerError.NoSession( "Session has to be initialized first." );
+        }
+        else
+            muxer.setStatus( channel, status );
     }
 
     public signal void Status( int channel, string status );
