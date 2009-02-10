@@ -1,3 +1,10 @@
+2009-02-09	Michael Lauer	<mlauer@vanille-media.de>
+
+	* The GSM 07.10 protocol engine has been split out and will be maintained
+	  as a seperate project. That way we can collaborate on a solid core while
+	  adding different frontends, such as a static one without dbus support, or
+	  using the library directly without the pty indirection.
+
 2009-02-08	Michael Lauer	<mlauer@vanille-media.de>
 
 	* Add support for a wakeup threshold. Some modems (such as the TI Calypso)

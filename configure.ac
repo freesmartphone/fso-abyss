@@ -1,4 +1,4 @@
-AC_INIT([fso-abyss], [0.2.0], [mlauer@vanille-media.de], [fso-abyss])
+AC_INIT([fso-abyss], [0.2.1], [mlauer@vanille-media.de], [fso-abyss])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -16,13 +16,13 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
 GLIB_REQUIRED=2.12.0
-GEE_REQUIRED=0.1.4
+GSM_REQUIRED=1.0.0
 DBUS_REQUIRED=0.76
 
 PKG_CHECK_MODULES(DEPS,
   glib-2.0 >= $GLIB_REQUIRED
   gobject-2.0 >= $GLIB_REQUIRED
-  gee-1.0 >= $GEE_REQUIRED
+  gsm0710-1.0 >= $GSM_REQUIRED
   dbus-glib-1 >= $DBUS_REQUIRED)
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
