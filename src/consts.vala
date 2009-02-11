@@ -69,12 +69,12 @@ namespace CONST
                 ascline.append_printf( "." );
             if ( i % BYTES_PER_LINE+1 == BYTES_PER_LINE )
             {
-                debug( hexline.str + " " + ascline.str );
+                debug( "%s", hexline.str + " " + ascline.str );
                 hexline = new StringBuilder( write? ">>> " : "<<< " );
                 ascline = new StringBuilder();
             }
         }
         if ( i % BYTES_PER_LINE+1 != BYTES_PER_LINE )
-            debug( hexline.str + " " + ascline.str );
+            debug( "%s", hexline.str + " " + ascline.str );
     }
 }
