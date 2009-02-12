@@ -38,6 +38,13 @@ public static void SIGINT_handler( int signal )
 }
 
 //===========================================================================
+public static void LOG_handler( string? log_domain, LogLevelFlags log_levels, string message )
+{
+    var t = TimeVal();
+    stdout.printf( "%s: %s\n", t.to_iso8601(), message );
+}
+
+//===========================================================================
 void main()
 {
     loop = new MainLoop( null, false );
@@ -52,12 +59,11 @@ void main()
 
         if ( request_name_result == DBus.RequestNameReply.PRIMARY_OWNER )
         {
+            Log.set_handler( null, LogLevelFlags.LEVEL_DEBUG, LOG_handler );
+            Posix.signal( Posix.SIGINT, SIGINT_handler );
 
-            // start server
             server = new Server();
             conn.register_object( MUXER_OBJ_PATH, server );
-
-            Posix.signal( Posix.SIGINT, SIGINT_handler );
 
             loop.run();
         }
