@@ -33,6 +33,16 @@ public class Server : Object
     Multiplexer muxer;
     KeyFile config;
 
+    bool autoopen = false;
+    bool autoclose = false;
+    bool autoexit = true;
+    string session_path = "/dev/ttySAC0";
+    uint session_speed = 115200;
+    bool session_mode = true;
+    uint session_framesize = 64;
+
+    uint channelsOpen;
+
     construct
     {
         try
@@ -56,11 +66,56 @@ public class Server : Object
             warning( "Server: could not read config file: %s", e.message );
             config = null;
         }
+        if ( config != null )
+        {
+            try
+            {
+                autoopen = config.get_boolean( "omuxerd", "autoopen" );
+                autoclose = config.get_boolean( "omuxerd", "autoclose" );
+                autoexit = config.get_boolean( "omuxerd", "autoexit" );
+                session_path = config.get_string( "session", "port" );
+                session_speed = config.get_integer( "session", "speed" );
+                session_mode = config.get_boolean( "session", "mode" );
+                session_framesize = config.get_integer( "session", "framesize" );
+            }
+            catch ( GLib.Error e )
+            {
+                warning( "Server: config error: %s", e.message );
+            }
+        }
     }
+
+    public void _shutdown()
+    {
+        debug( "_shutdown" );
+        if ( muxer != null )
+        {
+            muxer.closeSession();
+            muxer = null;
+        }
+        if ( autoexit )
+            loop.quit();
+    }
+
+    public void channelHasBeenClosed()
+    {
+        channelsOpen--;
+        if ( channelsOpen == 0 && autoclose )
+            _shutdown();
+    }
+
+    //
+    // DBus API
+    //
 
     public string GetVersion()
     {
         return MUXER_VERSION;
+    }
+
+    public bool hasAutoSession()
+    {
+        return autoopen;
     }
 
     public void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
@@ -98,6 +153,13 @@ public class Server : Object
     public void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error, GLib.Error
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
+
+        if ( autoopen )
+        {
+            debug( "AutoOpen!" );
+            OpenSession( session_mode, (int)session_framesize, session_path, (int)session_speed );
+        }
+
         if ( channel < 0 )
         {
             throw new MuxerError.InvalidChannel( "Channel has to be >= 0" );
@@ -108,7 +170,10 @@ public class Server : Object
             throw new MuxerError.NoSession( "Session has to be initialized first." );
         }
         else
+        {
             muxer.allocChannel( name, channel, out path, out allocated_channel );
+            channelsOpen++;
+        }
     }
 
     public void ReleaseChannel( string name ) throws DBus.Error, GLib.Error
@@ -145,16 +210,6 @@ public class Server : Object
     }
 
     public signal void Status( int channel, string status );
-
-    public void _shutdown()
-    {
-        debug( "_shutdown" );
-        if ( muxer != null )
-        {
-            muxer.closeSession();
-            muxer = null;
-        }
-    }
 
     public void TestCommand( string data ) throws DBus.Error, GLib.Error
     {

@@ -443,6 +443,7 @@ public class Multiplexer
         debug( "channel -> closed" );
         ctx.closeChannel( channel );
         vc[channel] = null;
+        server.channelHasBeenClosed();
     }
 
     //
