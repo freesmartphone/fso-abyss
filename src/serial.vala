@@ -73,6 +73,11 @@ public class Serial : Object
         _buffer = new ByteArray();
     }
 
+    protected void restartWriter()
+    {
+        _writeWatch = _channel.add_watch( IOCondition.OUT, _writeCallback );
+    }
+
     public string repr()
     {
         return "<Serial %s (%u)>".printf( _portname, _portspeed );
@@ -197,17 +202,13 @@ public class Serial : Object
 
     public int write( void* data, int len )
     {
-        assert( _portfd != -1 );
-        var restart = ( _buffer.len == 0 );
+        var restart = ( _portfd != -1 && _buffer.len == 0 );
         var temp = new uint8[len];
         Memory.copy( temp, data, len );
         _buffer.append( temp );
-        //debug( "current buffer length = %d", (int)_buffer.len );
+
         if ( restart )
-        {
-            //debug( "restarting writer" );
-            _writeWatch = _channel.add_watch( IOCondition.OUT, _writeCallback );
-        }
+            restartWriter();
         return len;
     }
 

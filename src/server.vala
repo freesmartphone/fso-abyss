@@ -36,11 +36,11 @@ public class Server : Object
     {
         try
         {
-            debug( "server object created" );
+            debug( "Server: created" );
             conn = DBus.Bus.get( DBus.BusType.SYSTEM );
             dbus = conn.get_object( DBUS_BUS_NAME, DBUS_OBJ_PATH, DBUS_INTERFACE );
         } catch (DBus.Error e) {
-            error( e.message );
+            error( "Server: %s", e.message );
         }
     }
 
