@@ -51,11 +51,26 @@ public class Serial : Object
         _hupfunc = hupfunc;
         _readfunc = readfunc;
         debug( "%s: constructed", repr() );
+        init();
     }
 
     ~Serial()
     {
         debug( "%s: destructed", repr() );
+    }
+
+    protected void init()
+    {
+        // setup watches, if we have delegates
+        if ( _hupfunc != null || _readfunc != null )
+        {
+            _channel = new IOChannel.unix_new( _portfd );
+            _channel.set_encoding( null );
+            _channel.set_buffer_size( 32768 );
+            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
+        }
+
+        _buffer = new ByteArray();
     }
 
     public string repr()
@@ -163,17 +178,6 @@ public class Serial : Object
         Posix.ioctl( _portfd, PosixExtra.TIOCMBIS, &_v24 );
         */
 
-        // setup watches, if we have delegates
-        if ( _hupfunc != null || _readfunc != null )
-        {
-            _channel = new IOChannel.unix_new( _portfd );
-            _channel.set_encoding( null );
-            _channel.set_buffer_size( 32768 );
-            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
-        }
-
-        _buffer = new ByteArray();
-
         return true;
     }
 
@@ -241,13 +245,14 @@ public class Pty : Serial
 {
     public Pty( HupFunc? hupfunc, ReadFunc? readfunc )
     {
-        debug( "Pseudo Tty created" );
-
         _readfunc = readfunc;
         _hupfunc = hupfunc;
         _isPty = true;
 
         _portspeed = 115200;
+
+        debug( "%s: constructed", repr() );
+        init();
     }
 }
 //===========================================================================

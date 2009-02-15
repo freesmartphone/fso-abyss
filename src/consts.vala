@@ -32,7 +32,7 @@ namespace CONST
     public const string MUXER_INTERFACE = "org.freesmartphone.GSM.MUX";
     public const string MUXER_VERSION   = "0.0.0";
 
-    public const double GSM_OPEN_CHANNEL_ACK_TIMEOUT = 2.0;
+    public const double GSM_OPEN_CHANNEL_ACK_TIMEOUT = 5.0;
     public const uint GSM_PING_SEND_TIMEOUT = 5;
     public const uint GSM_PING_RESPONSE_TIMEOUT = 3;
 
