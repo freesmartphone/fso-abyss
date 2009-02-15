@@ -30,10 +30,11 @@ public class Serial : Object
     string _portname;
     protected uint _portspeed;
     int _portfd = -1;
-    uint _v24;
+    //uint _v24;
 
     IOChannel _channel;
     uint _watch;
+    uint _writeWatch;
 
     protected bool _isPty;
     char[] _ptyname = new char[512]; // MAX_PATH?
@@ -41,8 +42,7 @@ public class Serial : Object
     protected HupFunc _hupfunc;
     protected ReadFunc _readfunc;
 
-    ByteArray _buffer;
-    uint _writeWatch;
+    protected ByteArray _buffer;
 
     public Serial( string portname, uint portspeed, HupFunc? hupfunc, ReadFunc? readfunc )
     {
@@ -50,27 +50,13 @@ public class Serial : Object
         _portspeed = portspeed;
         _hupfunc = hupfunc;
         _readfunc = readfunc;
+        _buffer = new ByteArray();
         debug( "%s: constructed", repr() );
-        init();
     }
 
     ~Serial()
     {
         debug( "%s: destructed", repr() );
-    }
-
-    protected void init()
-    {
-        // setup watches, if we have delegates
-        if ( _hupfunc != null || _readfunc != null )
-        {
-            _channel = new IOChannel.unix_new( _portfd );
-            _channel.set_encoding( null );
-            _channel.set_buffer_size( 32768 );
-            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
-        }
-
-        _buffer = new ByteArray();
     }
 
     protected void restartWriter()
@@ -183,7 +169,15 @@ public class Serial : Object
         Posix.ioctl( _portfd, PosixExtra.TIOCMBIS, &_v24 );
         */
 
-        // we might have already something in the buffer
+        // setup watches, if we have delegates
+        if ( _hupfunc != null || _readfunc != null )
+        {
+            _channel = new IOChannel.unix_new( _portfd );
+            _channel.set_encoding( null );
+            _channel.set_buffer_size( 32768 );
+            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
+        }
+        // we might have already queued something up in the buffer
         if ( _buffer.len > 0 )
             restartWriter();
 
@@ -253,11 +247,10 @@ public class Pty : Serial
         _readfunc = readfunc;
         _hupfunc = hupfunc;
         _isPty = true;
-
         _portspeed = 115200;
+        _buffer = new ByteArray();
 
         debug( "%s: constructed", repr() );
-        init();
     }
 }
 //===========================================================================

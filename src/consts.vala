@@ -30,7 +30,9 @@ namespace CONST
     public const string MUXER_BUS_NAME  = "org.freesmartphone.omuxerd";
     public const string MUXER_OBJ_PATH  = "/org/freesmartphone/GSM/Muxer";
     public const string MUXER_INTERFACE = "org.freesmartphone.GSM.MUX";
-    public const string MUXER_VERSION   = "0.0.0";
+    public const string MUXER_VERSION   = "0.2.1";
+
+    public const string CONFIG_FILENAME = "/etc/abyss.conf";
 
     public const double GSM_OPEN_CHANNEL_ACK_TIMEOUT = 5.0;
     public const uint GSM_PING_SEND_TIMEOUT = 5;

@@ -31,6 +31,7 @@ public class Server : Object
     dynamic DBus.Object dbus;
 
     Multiplexer muxer;
+    KeyFile config;
 
     construct
     {
@@ -39,8 +40,21 @@ public class Server : Object
             debug( "Server: created" );
             conn = DBus.Bus.get( DBus.BusType.SYSTEM );
             dbus = conn.get_object( DBUS_BUS_NAME, DBUS_OBJ_PATH, DBUS_INTERFACE );
-        } catch (DBus.Error e) {
+        } catch ( DBus.Error e )
+        {
             error( "Server: %s", e.message );
+        }
+
+        config = new KeyFile();
+        try
+        {
+            config.load_from_file( CONFIG_FILENAME, KeyFileFlags.NONE );
+            debug( "Server: read config from %s", CONFIG_FILENAME );
+        }
+        catch ( GLib.Error e )
+        {
+            warning( "Server: could not read config file: %s", e.message );
+            config = null;
         }
     }
 
