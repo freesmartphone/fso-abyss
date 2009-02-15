@@ -1,3 +1,13 @@
+2009-02-15	Michael Lauer	<mlauer@vanille-media.de>
+
+	* Added support for a configuration file. The config file comes in handy
+	  when you want the multiplexing session to be enabled when the first
+	  channel gets requested. With the config file you can also specify
+	  automatic closing the session on last channel release as well as
+	  automatic exiting of the main program, when the session gets closed.
+
+	* Released as 0.3.0
+
 2009-02-09	Michael Lauer	<mlauer@vanille-media.de>
 
 	* The GSM 07.10 protocol engine has been split out and will be maintained
