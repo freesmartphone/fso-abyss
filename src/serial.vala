@@ -183,6 +183,10 @@ public class Serial : Object
         Posix.ioctl( _portfd, PosixExtra.TIOCMBIS, &_v24 );
         */
 
+        // we might have already something in the buffer
+        if ( _buffer.len > 0 )
+            restartWriter();
+
         return true;
     }
 
