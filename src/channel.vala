@@ -54,6 +54,7 @@ public class Channel
         _status = Status.Requested;
         _name = name;
         _number = number;
+        _pty = new Pty( onHup, onRead );
         debug( "%s: constructed", repr() );
     }
 
@@ -69,9 +70,8 @@ public class Channel
 
     public string acked()
     {
-        debug( "%s: acked; creating pty", repr() );
+        debug( "%s: acked; opening pty", repr() );
 
-        _pty = new Pty( onHup, onRead );
         if ( !_pty.openRaw() )
         {
              debug( ":::could not open pty: %s", Posix.strerror( Posix.errno ) );
