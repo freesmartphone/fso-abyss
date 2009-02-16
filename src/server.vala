@@ -43,7 +43,7 @@ public class Server : Object
 
     uint channelsOpen;
 
-    construct
+    public Server()
     {
         try
         {
@@ -83,6 +83,11 @@ public class Server : Object
                 warning( "Server: config error: %s", e.message );
             }
         }
+    }
+
+    ~Server()
+    {
+        debug( "Server: destructed" );
     }
 
     public void _shutdown()

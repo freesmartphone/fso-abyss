@@ -64,8 +64,10 @@ void main()
 
             server = new Server();
             conn.register_object( MUXER_OBJ_PATH, server );
-
+            debug( "=> mainloop" );
             loop.run();
+            debug( "<= mainloop" );
+            server = null;
         }
         else
         {
