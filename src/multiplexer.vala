@@ -119,7 +119,6 @@ public class Multiplexer
         ctx = new Context();
         ctx.initialize();
 
-        ctx.server = 0;
         ctx.mode = advanced? 1 : 0;
         ctx.frame_size = framesize;
         ctx.port_speed = portspeed_;
