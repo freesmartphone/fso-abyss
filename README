@@ -1,12 +1,11 @@
 Todo:
 =====
- * Handle serial control
  * Add hook for channel ACK
  * Finish auto-reinit in protocol engine
  * Finish ping framework
  * Check PSC commands
- * Check SIEMENS version check extension
  * Use Serial object in multiplexer as well
+ * Implement Cinterion Basic 07.10 extensions
 
 Problems due to Vala:
 =====================
@@ -21,13 +20,13 @@ Features of this Multiplexer:
    - Virtual Channel,
    - Session handling, and
    - DBus Server.
- * No modem power nor init handling -- expects
-   that this has been already setup for us.
+ * Automatic modem power handling is optional and can be
+   configured in /etc/abyss.conf.
  * Top priority is getting frames from the modem,
    so it doesn't need to wait for us.
  * No channel ACK race conditions, a pty will only be allocated
-   if we get serial status packages from them muxer.
- * No pty overruns possible [as long as we have memory],
+   once we get the first serial status package from the modem.
+ * No pty overruns possible [as long as we have main memory left],
    channels will buffer everything in memory and deliver
    the chunks asynchronous.
  * Supports requesting individual channels in addition to
@@ -35,5 +34,3 @@ Features of this Multiplexer:
    channels keep state over opening/closing.
  * Ping framework (on modems that support it) for detecting
    stuck connections and transparent reinit.
- * AT-Command-based diagnostic interface
- * Workarounds for Modem-specific quirks

@@ -159,7 +159,7 @@ public class Server : Object
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
 
-        if ( autoopen )
+        if ( autoopen && muxer == null )
         {
             debug( "AutoOpen!" );
             OpenSession( session_mode, (int)session_framesize, session_path, (int)session_speed );
