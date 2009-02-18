@@ -118,7 +118,7 @@ public class Server : Object
         return MUXER_VERSION;
     }
 
-    public bool hasAutoSession()
+    public bool HasAutoSession()
     {
         return autoopen;
     }
