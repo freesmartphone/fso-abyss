@@ -6,6 +6,8 @@ Todo:
  * Check PSC commands
  * Use Serial object in multiplexer as well
  * Implement Cinterion Basic 07.10 extensions
+ * Improve concurrent throughput fairness and reduce latency
+ * Add org.freesmartphone.GSM.MUX.GetAllocation() -> a(s: origin, i: channel, s: ptypath)
 
 Problems due to Vala:
 =====================
