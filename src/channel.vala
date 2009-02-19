@@ -21,6 +21,7 @@
 
 //===========================================================================
 using GLib;
+using CONST;
 
 //===========================================================================
 // The Channel class
@@ -54,7 +55,7 @@ public class Channel
         _status = Status.Requested;
         _name = name;
         _number = number;
-        _pty = new Pty( onHup, onRead );
+        _pty = new Pty( onHup, onRead, PTY_READ_PRIORITY, PTY_WRITE_PRIORITY );
         debug( "%s: constructed", repr() );
     }
 

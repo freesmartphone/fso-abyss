@@ -38,6 +38,9 @@ namespace CONST
     public const uint GSM_PING_SEND_TIMEOUT = 5;
     public const uint GSM_PING_RESPONSE_TIMEOUT = 3;
 
+    public const int PTY_READ_PRIORITY = -20;
+    public const int PTY_WRITE_PRIORITY = 0;
+
     public errordomain MuxerError {
         ChannelTaken,
         InvalidChannel,

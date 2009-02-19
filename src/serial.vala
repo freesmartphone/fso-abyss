@@ -33,8 +33,8 @@ public class Serial : Object
     //uint _v24;
 
     IOChannel _channel;
-    int _readpriority;
-    int _writepriority;
+    protected int _readpriority;
+    protected int _writepriority;
     uint _readwatch;
     uint _writeWatch;
 
@@ -246,10 +246,12 @@ public class Serial : Object
 public class Pty : Serial
 //===========================================================================
 {
-    public Pty( HupFunc? hupfunc, ReadFunc? readfunc )
+    public Pty( HupFunc? hupfunc, ReadFunc? readfunc, int rp = 0, int wp = 0 )
     {
         _readfunc = readfunc;
         _hupfunc = hupfunc;
+        _readpriority = rp;
+        _writepriority = wp;
         _isPty = true;
         _portspeed = 115200;
         _buffer = new ByteArray();
