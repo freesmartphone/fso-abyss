@@ -33,7 +33,9 @@ public class Serial : Object
     //uint _v24;
 
     IOChannel _channel;
-    uint _watch;
+    int _readpriority;
+    int _writepriority;
+    uint _readwatch;
     uint _writeWatch;
 
     protected bool _isPty;
@@ -44,12 +46,14 @@ public class Serial : Object
 
     protected ByteArray _buffer;
 
-    public Serial( string portname, uint portspeed, HupFunc? hupfunc, ReadFunc? readfunc )
+    public Serial( string portname, uint portspeed, HupFunc? hupfunc, ReadFunc? readfunc, int rp = 0, int wp = 0 )
     {
         _portname = portname;
         _portspeed = portspeed;
         _hupfunc = hupfunc;
         _readfunc = readfunc;
+        _readpriority = rp;
+        _writepriority = wp;
         _buffer = new ByteArray();
         debug( "%s: constructed", repr() );
     }
@@ -61,7 +65,7 @@ public class Serial : Object
 
     protected void restartWriter()
     {
-        _writeWatch = _channel.add_watch( IOCondition.OUT, _writeCallback );
+        _writeWatch = _channel.add_watch_full( _writepriority, IOCondition.OUT, _writeCallback, null );
     }
 
     public string repr()
@@ -71,8 +75,8 @@ public class Serial : Object
 
     public void close()
     {
-        if ( _watch != 0 )
-        Source.remove( _watch );
+        if ( _readwatch != 0 )
+        Source.remove( _readwatch );
         _channel = null;
         if ( _portfd != -1 )
             Posix.close( _portfd );
@@ -175,7 +179,7 @@ public class Serial : Object
             _channel = new IOChannel.unix_new( _portfd );
             _channel.set_encoding( null );
             _channel.set_buffer_size( 32768 );
-            _watch = _channel.add_watch( IOCondition.IN | IOCondition.HUP, _actionCallback );
+            _readwatch = _channel.add_watch_full( _readpriority, IOCondition.IN | IOCondition.HUP, _actionCallback, null );
         }
         // we might have already queued something up in the buffer
         if ( _buffer.len > 0 )
