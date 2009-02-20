@@ -40,6 +40,8 @@ public class Server : Object
     uint session_speed = 115200;
     bool session_mode = true;
     uint session_framesize = 64;
+    uint wakeup_threshold = 0;
+    uint wakeup_waitms = 0;
 
     uint channelsOpen;
 
@@ -77,6 +79,8 @@ public class Server : Object
                 session_speed = config.get_integer( "session", "speed" );
                 session_mode = config.get_boolean( "session", "mode" );
                 session_framesize = config.get_integer( "session", "framesize" );
+                wakeup_threshold = config.get_integer( "device", "wakeup_threshold" );
+                wakeup_waitms = config.get_integer( "device", "wakeup_waitms" );
             }
             catch ( GLib.Error e )
             {
@@ -161,8 +165,11 @@ public class Server : Object
 
         if ( autoopen && muxer == null )
         {
-            debug( "AutoOpen!" );
+            debug( "auto configuring..." );
             OpenSession( session_mode, (int)session_framesize, session_path, (int)session_speed );
+
+            if ( wakeup_threshold > 0 && wakeup_waitms > 0 )
+                SetWakeupThreshold( wakeup_threshold, wakeup_waitms );
         }
 
         if ( channel < 0 )
@@ -192,9 +199,9 @@ public class Server : Object
             muxer.releaseChannel( name );
     }
 
-    public void SetWakeupThreshold( int seconds, int waitms ) throws DBus.Error, GLib.Error
+    public void SetWakeupThreshold( uint seconds, uint waitms ) throws DBus.Error, GLib.Error
     {
-        debug( "SetWakeupThreshold to wakeup before transmitting data after %d seconds of idleness", seconds );
+        debug( "SetWakeupThreshold to wakeup before transmitting after %u sec. of idleness, wait period = %u msec.", seconds, waitms );
         if ( muxer == null )
         {
             throw new MuxerError.NoSession( "Session has to be initialized first." );

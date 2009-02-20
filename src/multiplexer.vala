@@ -271,9 +271,9 @@ public class Multiplexer
         // FIXME: ...
     }
 
-    public void setWakeupThreshold( int seconds, int waitms ) throws GLib.Error
+    public void setWakeupThreshold( uint seconds, uint waitms ) throws GLib.Error
     {
-        if ( seconds < 0 ) /* disable */
+        if ( seconds == 0 ) /* disable */
             idle_wakeup_timer = null;
 
         if ( idle_wakeup_timer == null )
