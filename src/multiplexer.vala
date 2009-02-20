@@ -580,16 +580,22 @@ public class Multiplexer
     public void open_channel( int channel )
     {
         debug( "0710 -> open channel %d", channel );
+        error( "unhandled modem side open channel command" );
     }
 
     public void close_channel( int channel )
     {
         debug( "0710 -> close channel %d", channel );
+        var message = new char[] { '\r', '\n', '!', 'S', 'H', 'U', 'T', 'D', 'O', 'W', 'N', '\r', '\n' };
+        deliver_data( channel, message, message.length );
+        vc[channel] = null;
+        server.channelHasBeenClosed();
     }
 
     public void terminate()
     {
         debug( "0710 -> terminate" );
+        // FIXME send close session signal, remove muxer object
     }
 
     public void response_to_test( char[] data )
