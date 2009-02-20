@@ -567,6 +567,8 @@ public class Multiplexer
             if ( !vc[channel].isAcked() )
                 vc[channel].acked();
 
+            vc[channel].setSerialStatus( serial_status );
+
             server.Status( channel, status );
         }
         clearPingResponseTimeout();

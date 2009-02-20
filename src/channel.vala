@@ -22,6 +22,7 @@
 //===========================================================================
 using GLib;
 using CONST;
+using Gsm0710;
 
 //===========================================================================
 // The Channel class
@@ -137,12 +138,19 @@ public class Channel
     public void onRead( Serial serial )
     {
         debug( "%s: can read from Pty", repr() );
+        assert( _multiplexer != null );
+
+        if ( ( _serial_status & SerialStatus.FC ) == SerialStatus.FC )
+        {
+            warning( "%s: FC active... Waiting to get cleared.", repr() );
+            return;
+        }
+
         var buffer = new char[8192];
         int bytesread = serial.read( buffer, 8192 );
         debug( ":::read %d bytes", bytesread );
 
-        if (_multiplexer != null )
-            _multiplexer.submit_data( _number, buffer, (int)bytesread );
+        _multiplexer.submit_data( _number, buffer, (int)bytesread );
     }
 
     public void onHup( Serial serial )
