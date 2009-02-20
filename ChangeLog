@@ -1,5 +1,11 @@
 2009-02-20	Michael Lauer	<mlauer@vanille-media.de>
 
+	* Added sending v24 data bytes on virtual channel from host -> module.
+	* Changed dbus test command signature to 'ay' (array of bytes),
+	  since test commands can embed null-bytes.
+
+2009-02-20	Michael Lauer	<mlauer@vanille-media.de>
+
 	* Support for wakeup threshold and waitms is now configurable as well.
 	
 	* Released as 0.3.1

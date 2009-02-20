@@ -270,7 +270,9 @@ public class Multiplexer
         if ( vc[channel] == null )
             throw new MuxerError.NoChannel( "Could not find channel with that index." );
 
-        // FIXME: ...
+        var v24 = stringToSerialStatus( status );
+        wakeupIfNecessary();
+        ctx.setStatus( channel, v24 );
     }
 
     public void setWakeupThreshold( uint seconds, uint waitms ) throws GLib.Error
@@ -291,11 +293,11 @@ public class Multiplexer
         idle_wakeup_waitms = waitms;
     }
 
-    public void testCommand( string data ) throws GLib.Error
+    public void testCommand( uint8[] data ) throws GLib.Error
     {
         debug( "muxer: testCommand" );
         wakeupIfNecessary();
-        ctx.sendTest( data, (int)data.size() );
+        ctx.sendTest( data, data.length );
     }
 
     //
@@ -398,20 +400,34 @@ public class Multiplexer
         return 0;
     }
 
-    public string serialStatusToString( int status )
+    public string serialStatusToString( int status ) // module -> application
     {
         var sb = new StringBuilder();
         if ( ( status & SerialStatus.FC ) == SerialStatus.FC )
             sb.append( "FC ");
-        if ( ( status & SerialStatus.DSR ) == SerialStatus.DSR )
+        if ( ( status & SerialStatus.RTC ) == SerialStatus.RTC )
             sb.append( "DSR ");
-        if ( ( status & SerialStatus.CTS ) == SerialStatus.CTS )
+        if ( ( status & SerialStatus.RTR ) == SerialStatus.RTR )
             sb.append( "CTS ");
         if ( ( status & SerialStatus.RING ) == SerialStatus.RING )
             sb.append( "RING ");
         if ( ( status & SerialStatus.DCD ) == SerialStatus.DCD )
             sb.append( "DCD ");
         return sb.str;
+    }
+
+    public int stringToSerialStatus( string status ) // application -> module
+    {
+        int v24 = 0;
+        var bits = status.split( " " );
+        foreach( var bit in bits )
+        {
+            if ( bit == "DTR" )
+                v24 |= SerialStatus.RTC;
+            else if ( bit == "RTS" )
+                v24 |= SerialStatus.RTR;
+        }
+        return v24;
     }
 
     public void clearPingResponseTimeout()

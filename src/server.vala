@@ -223,9 +223,9 @@ public class Server : Object
 
     public signal void Status( int channel, string status );
 
-    public void TestCommand( string data ) throws DBus.Error, GLib.Error
+    public void TestCommand( uint8[] data ) throws DBus.Error, GLib.Error
     {
-        debug( "TestCommand: %s", data );
+        debug( "Sending %d test command bytes", data.length );
         muxer.testCommand( data );
     }
 
