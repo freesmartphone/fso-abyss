@@ -214,6 +214,8 @@ public class Multiplexer
         if ( vc[channel] != null )
             throw new MuxerError.ChannelTaken( "Channel is already taken." );
 
+        wakeupIfNecessary();
+
         var ok = ctx.openChannel( channel );
         assert( ok );
         debug( "0710 open channel returned result %d", (int)ok );
@@ -274,22 +276,25 @@ public class Multiplexer
     public void setWakeupThreshold( uint seconds, uint waitms ) throws GLib.Error
     {
         if ( seconds == 0 ) /* disable */
-            idle_wakeup_timer = null;
-
-        if ( idle_wakeup_timer == null )
         {
-            idle_wakeup_timer = new Timer();
-            idle_wakeup_timer.start();
+            idle_wakeup_timer = null;
         }
-
+        else /* enable */
+        {
+            if ( idle_wakeup_timer == null )
+            {
+                idle_wakeup_timer = new Timer();
+                idle_wakeup_timer.start();
+            }
+        }
         idle_wakeup_threshold = seconds;
         idle_wakeup_waitms = waitms;
-
     }
 
     public void testCommand( string data ) throws GLib.Error
     {
         debug( "muxer: testCommand" );
+        wakeupIfNecessary();
         ctx.sendTest( data, (int)data.size() );
     }
 
@@ -415,13 +420,8 @@ public class Multiplexer
             Source.remove( pingwatch );
     }
 
-    //
-    // callbacks from channel
-    //
-    public void submit_data( int channel, void* data, int len )
+    public void wakeupIfNecessary()
     {
-        debug( "channel -> submit_data" );
-
         if ( idle_wakeup_timer != null )
         {
             var elapsed = idle_wakeup_timer.elapsed();
@@ -433,13 +433,22 @@ public class Multiplexer
                 Thread.usleep( 1000 * idle_wakeup_waitms );
             }
         }
+    }
 
+    //
+    // callbacks from channel
+    //
+    public void submit_data( int channel, void* data, int len )
+    {
+        debug( "channel -> submit_data" );
+        wakeupIfNecessary();
         ctx.writeDataForChannel( channel, data, len );
     }
 
     public void channel_closed( int channel )
     {
         debug( "channel -> closed" );
+        wakeupIfNecessary();
         ctx.closeChannel( channel );
         vc[channel] = null;
         server.channelHasBeenClosed();
