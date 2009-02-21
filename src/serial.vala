@@ -65,7 +65,7 @@ public class Serial : Object
 
     protected void restartWriter()
     {
-        _writeWatch = _channel.add_watch_full( _writepriority, IOCondition.OUT, _writeCallback, null );
+        _writeWatch = _channel.add_watch_full( _writepriority, IOCondition.OUT, _writeCallback );
     }
 
     public string repr()
@@ -179,7 +179,7 @@ public class Serial : Object
             _channel = new IOChannel.unix_new( _portfd );
             _channel.set_encoding( null );
             _channel.set_buffer_size( 32768 );
-            _readwatch = _channel.add_watch_full( _readpriority, IOCondition.IN | IOCondition.HUP, _actionCallback, null );
+            _readwatch = _channel.add_watch_full( _readpriority, IOCondition.IN | IOCondition.HUP, _actionCallback );
         }
         // we might have already queued something up in the buffer
         if ( _buffer.len > 0 )
