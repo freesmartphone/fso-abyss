@@ -17,9 +17,6 @@ sbin_PROGRAMS = fso-abyss
 
 fso_abyss_VALASOURCES = \
 	src/consts.vala \
-	src/serial.vala \
-	src/channel.vala \
-	src/multiplexer.vala \
 	src/server.vala \
 	src/main.vala \
 	$(NULL)
@@ -31,12 +28,13 @@ fso_abyss_SOURCES = \
 	$(NULL)
 
 src/.vala.stamp: $(fso_abyss_VALASOURCES)
-	$(VALAC) -c --vapidir vapi --pkg gio-2.0 \
-	                           --pkg dbus-glib-1 \
-	                           --pkg gsm0710-1.0 \
-	                           --pkg posix \
-	                           --pkg posixextra \
-	                           --save-temps --basedir $(top_srcdir) $^
+	$(VALAC) -c --vapidir vapi \
+	            --pkg posix \
+	            --pkg gio-2.0 \
+	            --pkg dbus-glib-1 \
+	            --pkg gsm0710mux-1.0 \
+	            --save-temps \
+	            --basedir $(top_srcdir) $^
 	touch $@
 
 fso_abyss_LDADD = \

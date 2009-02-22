@@ -1,3 +1,12 @@
+2009-02-22	Michael Lauer	<mlauer@vanille-media.de>
+
+	* fso-abyss has been split into two subprojects:
+	  - libgsm0710mux: the multiplexing engine
+	  - fso-abyss: the (now legacy) dbus/pty server
+	* fso-abyss will be kept update as a quick means to check
+	  basic functionality, but the plan is to use libgsm0710mux
+	  from ogsmd directly.
+
 2009-02-20	Michael Lauer	<mlauer@vanille-media.de>
 
 	* Added sending v24 data bytes on virtual channel from host -> module.

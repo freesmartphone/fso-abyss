@@ -32,7 +32,7 @@ public static void SIGINT_handler( int signal )
     debug( "SIGINT handler called" );
     if ( server != null )
     {
-        server._shutdown();
+        server.CloseSession();
         loop.quit();
     }
 }
