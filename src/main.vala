@@ -32,7 +32,14 @@ public static void SIGINT_handler( int signal )
     debug( "SIGINT handler called" );
     if ( server != null )
     {
-        server.CloseSession();
+        try
+        {
+            server.CloseSession();
+        }
+        catch ( Error e )
+        {
+            warning( "Oops: %s", e.message );
+        }
         loop.quit();
     }
 }
@@ -74,7 +81,7 @@ void main()
             error( "Can't register bus name. Service already started?\n" );
         }
     } catch (Error e) {
-        error( "Oops: %s\n", e.message );
+        error( "Oops: %s", e.message );
     }
 }
 
