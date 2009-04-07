@@ -30,7 +30,7 @@ public class Server : Object
     DBus.Connection conn;
     dynamic DBus.Object dbus;
 
-    Gsm0710mux.Server server;
+    Gsm0710mux.Manager manager;
 
     public Server()
     {
@@ -44,7 +44,7 @@ public class Server : Object
             error( "DBus-Server: %s", e.message );
         }
 
-        server = new Gsm0710mux.Server();
+        manager = new Gsm0710mux.Manager();
     }
 
     ~Server()
@@ -58,22 +58,22 @@ public class Server : Object
 
     public string GetVersion()
     {
-        return server.getVersion();
+        return manager.getVersion();
     }
 
     public bool HasAutoSession()
     {
-        return server.hasAutoSession();
+        return manager.hasAutoSession();
     }
 
     public void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
     {
-        server.openSession( advanced, framesize, port, portspeed );
+        manager.openSession( advanced, framesize, port, portspeed );
     }
 
     public void CloseSession() throws DBus.Error, GLib.Error
     {
-        server.closeSession();
+        manager.closeSession();
     }
 
     public void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error, GLib.Error
@@ -85,7 +85,7 @@ public class Server : Object
         ci.consumer = name;
         ci.number = channel;
 
-        server.allocChannel( ref ci );
+        manager.allocChannel( ref ci );
 
         path = ci.transport;
         allocated_channel = ci.number;
@@ -93,24 +93,24 @@ public class Server : Object
 
     public void ReleaseChannel( string name ) throws DBus.Error, GLib.Error
     {
-        server.releaseChannel( name );
+        manager.releaseChannel( name );
     }
 
     public void SetWakeupThreshold( uint seconds, uint waitms ) throws DBus.Error, GLib.Error
     {
-        server.setWakeupThreshold( seconds, waitms );
+        manager.setWakeupThreshold( seconds, waitms );
     }
 
     public void SetStatus( int channel, string status ) throws DBus.Error, GLib.Error
     {
-        server.setStatus( channel, status );
+        manager.setStatus( channel, status );
     }
 
     public signal void Status( int channel, string status );
 
     public void TestCommand( uint8[] data ) throws DBus.Error, GLib.Error
     {
-        server.testCommand( data );
+        manager.testCommand( data );
     }
 
 }
