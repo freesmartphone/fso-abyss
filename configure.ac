@@ -1,4 +1,4 @@
-AC_INIT([fso-abyss], [0.3.2], [mlauer@vanille-media.de], [fso-abyss])
+AC_INIT([fso-abyss], [0.3.3], [mlauer@vanille-media.de], [fso-abyss])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -16,7 +16,7 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
 GLIB_REQUIRED=2.12.0
-GSMMUX_REQUIRED=0.3.1
+GSMMUX_REQUIRED=0.3.3
 DBUS_REQUIRED=0.76
 
 PKG_CHECK_MODULES(DEPS,

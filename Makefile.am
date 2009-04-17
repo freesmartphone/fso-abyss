@@ -43,6 +43,7 @@ fso_abyss_LDADD = \
 	$(NULL)
 
 EXTRA_DIST = \
+	MAINTAINERS \
 	$(fso_abyss_VALASOURCES) \
 	src/.vala.stamp \
 	$(NULL)
