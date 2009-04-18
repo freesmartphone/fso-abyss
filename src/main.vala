@@ -27,9 +27,10 @@ Server server;
 MainLoop loop;
 
 //===========================================================================
-public static void SIGINT_handler( int signal )
+public static void SIGINT_handler( int signum )
 {
     debug( "SIGINT handler called" );
+    Posix.signal( signum, null ); // restore original signal handler
     if ( server != null )
     {
         try
