@@ -23,14 +23,12 @@ fso_abyss_VALASOURCES = \
 
 fso_abyss_SOURCES = \
 	$(fso_abyss_VALASOURCES:.vala=.c) \
-	$(fso_abyss_VALASOURCES:.vala=.h) \
 	\
 	$(NULL)
 
 src/.vala.stamp: $(fso_abyss_VALASOURCES)
 	$(VALAC) -c --vapidir vapi \
 	            --pkg posix \
-	            --pkg gio-2.0 \
 	            --pkg dbus-glib-1 \
 	            --pkg gsm0710mux-1.0 \
 	            --save-temps \
@@ -39,7 +37,6 @@ src/.vala.stamp: $(fso_abyss_VALASOURCES)
 
 fso_abyss_LDADD = \
 	$(DEPS_LIBS) \
-	-lutil \
 	$(NULL)
 
 EXTRA_DIST = \
@@ -68,5 +65,5 @@ MAINTAINERCLEANFILES = aclocal.m4 compile config.guess config.sub \
                        intltool-merge \
                        intltool-update \
                        mkinstalldirs \
-                       src/*.c src/*.h \
+                       src/*.c src/*.h *~ \
                        $(NULL)

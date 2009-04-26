@@ -55,6 +55,7 @@ public static void LOG_handler( string? log_domain, LogLevelFlags log_levels, st
 //===========================================================================
 void main()
 {
+    Environment.set_prgname( "fso-abyss" );
     loop = new MainLoop( null, false );
 
     try
