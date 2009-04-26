@@ -9,6 +9,7 @@ config.log
 config.status
 config.sub
 configure
+compile
 depcomp
 install-sh
 libtool
@@ -23,3 +24,10 @@ missing
 *.lo
 *.la
 stamp-h1
+
+.dirstamp
+.vala.stamp
+
+org.freesmartphone.omuxerd.service
+fso-abyss
+

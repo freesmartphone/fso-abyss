@@ -27,7 +27,7 @@ fso_abyss_SOURCES = \
 	$(NULL)
 
 src/.vala.stamp: $(fso_abyss_VALASOURCES)
-	$(VALAC) -c --vapidir vapi \
+	$(VALAC) -C --vapidir vapi \
 	            --pkg posix \
 	            --pkg dbus-glib-1 \
 	            --pkg gsm0710mux-1.0 \
