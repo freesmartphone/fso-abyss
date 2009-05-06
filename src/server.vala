@@ -25,7 +25,22 @@ using CONST;
 
 //===========================================================================
 [DBus (name = "org.freesmartphone.GSM.MUX")]
-public class Server : Object
+public abstract interface OrgFreesmartphoneGsmMux
+{
+    public abstract string GetVersion() throws DBus.Error;
+    public abstract bool HasAutoSession() throws DBus.Error;
+    public abstract void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error;
+    public abstract void CloseSession() throws DBus.Error;
+    public abstract void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error;
+    public abstract void ReleaseChannel( string name ) throws DBus.Error;
+    public abstract void SetWakeupThreshold( uint seconds, uint waitms ) throws DBus.Error;
+    public abstract void SetStatus( int channel, string status ) throws DBus.Error;
+    public signal void Status( int channel, string status );
+    public abstract void TestCommand( uint8[] data ) throws DBus.Error;
+}
+
+//===========================================================================
+public class Server : OrgFreesmartphoneGsmMux, Object
 {
     DBus.Connection conn;
     dynamic DBus.Object dbus;
@@ -56,27 +71,27 @@ public class Server : Object
     // DBus API
     //
 
-    public string GetVersion()
+    public string GetVersion() throws DBus.Error
     {
         return manager.getVersion();
     }
 
-    public bool HasAutoSession()
+    public bool HasAutoSession() throws DBus.Error
     {
         return manager.hasAutoSession();
     }
 
-    public void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error, GLib.Error
+    public void OpenSession( bool advanced, int framesize, string port, int portspeed ) throws DBus.Error
     {
         manager.openSession( advanced, framesize, port, portspeed );
     }
 
-    public void CloseSession() throws DBus.Error, GLib.Error
+    public void CloseSession() throws DBus.Error
     {
         manager.closeSession();
     }
 
-    public void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error, GLib.Error
+    public void AllocChannel( string name, int channel, out string path, out int allocated_channel ) throws DBus.Error
     {
         debug( "AllocChannel requested for name %s, requested channel %d", name, channel );
 
@@ -91,24 +106,22 @@ public class Server : Object
         allocated_channel = ci.number;
     }
 
-    public void ReleaseChannel( string name ) throws DBus.Error, GLib.Error
+    public void ReleaseChannel( string name ) throws DBus.Error
     {
         manager.releaseChannel( name );
     }
 
-    public void SetWakeupThreshold( uint seconds, uint waitms ) throws DBus.Error, GLib.Error
+    public void SetWakeupThreshold( uint seconds, uint waitms ) throws DBus.Error
     {
         manager.setWakeupThreshold( seconds, waitms );
     }
 
-    public void SetStatus( int channel, string status ) throws DBus.Error, GLib.Error
+    public void SetStatus( int channel, string status ) throws DBus.Error
     {
         manager.setStatus( channel, status );
     }
 
-    public signal void Status( int channel, string status );
-
-    public void TestCommand( uint8[] data ) throws DBus.Error, GLib.Error
+    public void TestCommand( uint8[] data ) throws DBus.Error
     {
         manager.testCommand( data );
     }
